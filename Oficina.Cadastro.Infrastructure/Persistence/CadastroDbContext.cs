@@ -15,6 +15,8 @@ public class CadastroDbContext : DbContext
     public DbSet<Profissional> Profissionais => Set<Profissional>();
     public DbSet<Servico> Servicos => Set<Servico>();
     public DbSet<Peca> Pecas => Set<Peca>();
+    public DbSet<OrdemServico> OrdensServico => Set<OrdemServico>();
+    public DbSet<ItemOrdemServico> ItensOrdemServico => Set<ItemOrdemServico>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,6 +28,8 @@ public class CadastroDbContext : DbContext
         modelBuilder.ApplyConfiguration(new ProfissionalConfiguration());
         modelBuilder.ApplyConfiguration(new ServicoConfiguration());
         modelBuilder.ApplyConfiguration(new PecaConfiguration());
+        modelBuilder.ApplyConfiguration(new OrdemServicoConfiguration());
+        modelBuilder.ApplyConfiguration(new ItemOrdemServicoConfiguration());
 
         base.OnModelCreating(modelBuilder);
     }
