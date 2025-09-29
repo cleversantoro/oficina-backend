@@ -43,11 +43,13 @@ var app = builder.Build();
 
 app.UseCors("default");
 
-if (app.Environment.IsDevelopment())
+app.UseSwagger();
+app.UseSwaggerUI(c =>
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Oficina API v1");
+    c.RoutePrefix = string.Empty; // deixa o Swagger na raiz "/"
+});
+
 
 app.MapGet("/", () => Results.Ok(new { name = "Oficina API", status = "ok" }));
 app.MapGet("/health", () => Results.Ok("healthy"));
