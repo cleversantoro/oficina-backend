@@ -1,3 +1,4 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Builder;
@@ -15,8 +16,17 @@ public static class OficinaModule
 {
     public static IServiceCollection AddCadastroModule(this IServiceCollection services, IConfiguration config)
     {
-        // Usa a mesma ConnectionString do gateway (Default), porém com DbContext do módulo
-        var cs = config.GetConnectionString("Default") ?? config["ConnectionStrings:Default"]!;
+        // Usa a ConnectionString específica do módulo (OficinaDb), com fallback para a padrão
+        var cs =
+            config.GetConnectionString("OficinaDb") ??
+            config["ConnectionStrings:OficinaDb"] ??
+            config.GetConnectionString("Default") ??
+            config["ConnectionStrings:Default"];
+
+        if (string.IsNullOrWhiteSpace(cs))
+        {
+            throw new InvalidOperationException("Connection string 'OficinaDb' was not found.");
+        }
         services.AddDbContext<CadastroDbContext>(opt => 
         opt.UseNpgsql(cs, x => x.MigrationsHistoryTable("__EFMigrationsHistory", CadastroDbContext.Schema)));
 
