@@ -9,12 +9,6 @@
 
 
   <ItemGroup>
-    <Compile Remove="Entities\ItemOrdemServico.cs" />
-    <Compile Remove="Entities\OrdemServico.cs" />
-  </ItemGroup>
-
-
-  <ItemGroup>
     <ProjectReference Include="..\Oficina.SharedKernel\Oficina.SharedKernel.csproj" />
   </ItemGroup>
 

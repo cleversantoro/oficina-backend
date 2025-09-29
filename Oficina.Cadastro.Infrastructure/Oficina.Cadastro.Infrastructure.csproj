@@ -1,9 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
-  <ItemGroup>
-    <Compile Remove="Persistence\Configurations\ItemOrdemServicoConfiguration.cs" />
-    <Compile Remove="Persistence\Configurations\OrdemServicoConfiguration.cs" />
-  </ItemGroup>
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\Oficina.Cadastro.Domain\Oficina.Cadastro.Domain.csproj" />
