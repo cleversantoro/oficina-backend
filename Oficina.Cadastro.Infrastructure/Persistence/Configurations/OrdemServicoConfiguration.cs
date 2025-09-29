@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Oficina.Cadastro.Domain.Entities;
+using Oficina.Cadastro.Infrastructure.Persistence;
 
 namespace Oficina.Cadastro.Infrastructure.Persistence.Configurations;
 
@@ -8,7 +9,7 @@ public class OrdemServicoConfiguration : IEntityTypeConfiguration<OrdemServico>
 {
     public void Configure(EntityTypeBuilder<OrdemServico> builder)
     {
-        builder.ToTable("ordens_servico");
+        builder.ToTable("ordens_servico", CadastroDbContext.Schema);
 
         builder.HasKey(x => x.Id);
 

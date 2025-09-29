@@ -15,7 +15,7 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
+                .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             modelBuilder.HasDefaultSchema("oficina");
@@ -66,6 +66,44 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                 b.ToTable("clientes", "oficina");
             });
 
+            modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.ItemOrdemServico", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
+
+                b.Property<Guid>("OrdemServicoId")
+                    .HasColumnType("uuid");
+
+                b.Property<Guid?>("PecaId")
+                    .HasColumnType("uuid");
+
+                b.Property<decimal>("Preco")
+                    .HasColumnType("numeric(12,2)");
+
+                b.Property<decimal>("Quantidade")
+                    .HasColumnType("numeric(12,3)");
+
+                b.Property<Guid?>("ServicoId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("Tipo")
+                    .IsRequired()
+                    .HasMaxLength(20)
+                    .HasColumnType("character varying(20)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("OrdemServicoId");
+
+                b.HasIndex("PecaId");
+
+                b.HasIndex("ServicoId");
+
+                b.ToTable("itens_ordem_servico", "oficina");
+            });
+
             modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.Moto", b =>
             {
                 b.Property<Guid>("Id")
@@ -111,6 +149,49 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                     .HasDatabaseName("IX_motos_placa");
 
                 b.ToTable("motos", "oficina");
+            });
+
+            modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.OrdemServico", b =>
+            {
+                b.Property<Guid>("Id")
+                    .ValueGeneratedOnAdd()
+                    .HasColumnType("uuid")
+                    .HasDefaultValueSql("gen_random_uuid()");
+
+                b.Property<Guid>("ClienteId")
+                    .HasColumnType("uuid");
+
+                b.Property<DateTime>("DataAbertura")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<DateTime?>("DataFechamento")
+                    .HasColumnType("timestamp with time zone");
+
+                b.Property<Guid>("MotoId")
+                    .HasColumnType("uuid");
+
+                b.Property<Guid>("ProfissionalId")
+                    .HasColumnType("uuid");
+
+                b.Property<string>("Status")
+                    .IsRequired()
+                    .HasMaxLength(40)
+                    .HasColumnType("character varying(40)");
+
+                b.Property<decimal>("Total")
+                    .HasColumnType("numeric(12,2)");
+
+                b.HasKey("Id");
+
+                b.HasIndex("ClienteId");
+
+                b.HasIndex("MotoId");
+
+                b.HasIndex("ProfissionalId");
+
+                b.HasIndex("DataAbertura", "Status");
+
+                b.ToTable("ordens_servico", "oficina");
             });
 
             modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.Peca", b =>
@@ -191,6 +272,63 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                     .IsRequired();
 
                 b.Navigation("Cliente");
+            });
+
+            modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.ItemOrdemServico", b =>
+            {
+                b.HasOne("Oficina.Cadastro.Domain.Entities.OrdemServico", "OrdemServico")
+                    .WithMany("Itens")
+                    .HasForeignKey("OrdemServicoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("Oficina.Cadastro.Domain.Entities.Peca", "Peca")
+                    .WithMany()
+                    .HasForeignKey("PecaId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.HasOne("Oficina.Cadastro.Domain.Entities.Servico", "Servico")
+                    .WithMany()
+                    .HasForeignKey("ServicoId")
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                b.Navigation("OrdemServico");
+
+                b.Navigation("Peca");
+
+                b.Navigation("Servico");
+            });
+
+            modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.OrdemServico", b =>
+            {
+                b.HasOne("Oficina.Cadastro.Domain.Entities.Cliente", "Cliente")
+                    .WithMany()
+                    .HasForeignKey("ClienteId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("Oficina.Cadastro.Domain.Entities.Moto", "Moto")
+                    .WithMany()
+                    .HasForeignKey("MotoId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.HasOne("Oficina.Cadastro.Domain.Entities.Profissional", "Profissional")
+                    .WithMany()
+                    .HasForeignKey("ProfissionalId")
+                    .OnDelete(DeleteBehavior.Cascade)
+                    .IsRequired();
+
+                b.Navigation("Cliente");
+
+                b.Navigation("Moto");
+
+                b.Navigation("Profissional");
+            });
+
+            modelBuilder.Entity("Oficina.Cadastro.Domain.Entities.OrdemServico", b =>
+            {
+                b.Navigation("Itens");
             });
 #pragma warning restore 612, 618
         }
