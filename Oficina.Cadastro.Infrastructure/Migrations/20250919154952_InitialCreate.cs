@@ -77,45 +77,45 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                     table.PrimaryKey("PK_servicos", x => x.Id);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "ordens_servico",
-                schema: "oficina",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    MotoId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ClienteId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProfissionalId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Status = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
-                    DataAbertura = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    DataFechamento = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    Total = table.Column<decimal>(type: "numeric(12,2)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ordens_servico", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ordens_servico_clientes_ClienteId",
-                        column: x => x.ClienteId,
-                        principalSchema: "oficina",
-                        principalTable: "clientes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ordens_servico_motos_MotoId",
-                        column: x => x.MotoId,
-                        principalSchema: "oficina",
-                        principalTable: "motos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ordens_servico_profissionais_ProfissionalId",
-                        column: x => x.ProfissionalId,
-                        principalSchema: "oficina",
-                        principalTable: "profissionais",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
+            //migrationBuilder.CreateTable(
+            //    name: "ordens_servico",
+            //    schema: "oficina",
+            //    columns: table => new
+            //    {
+            //        Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+            //        MotoId = table.Column<Guid>(type: "uuid", nullable: false),
+            //        ClienteId = table.Column<Guid>(type: "uuid", nullable: false),
+            //        ProfissionalId = table.Column<Guid>(type: "uuid", nullable: false),
+            //        Status = table.Column<string>(type: "character varying(40)", maxLength: 40, nullable: false),
+            //        DataAbertura = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+            //        DataFechamento = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+            //        Total = table.Column<decimal>(type: "numeric(12,2)", nullable: false)
+            //    },
+            //    constraints: table =>
+            //    {
+            //        table.PrimaryKey("PK_ordens_servico", x => x.Id);
+            //        table.ForeignKey(
+            //            name: "FK_ordens_servico_clientes_ClienteId",
+            //            column: x => x.ClienteId,
+            //            principalSchema: "oficina",
+            //            principalTable: "clientes",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //        table.ForeignKey(
+            //            name: "FK_ordens_servico_motos_MotoId",
+            //            column: x => x.MotoId,
+            //            principalSchema: "oficina",
+            //            principalTable: "motos",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //        table.ForeignKey(
+            //            name: "FK_ordens_servico_profissionais_ProfissionalId",
+            //            column: x => x.ProfissionalId,
+            //            principalSchema: "oficina",
+            //            principalTable: "profissionais",
+            //            principalColumn: "Id",
+            //            onDelete: ReferentialAction.Cascade);
+            //    });
 
             migrationBuilder.CreateTable(
                 name: "motos",
@@ -143,44 +143,44 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
-            migrationBuilder.CreateTable(
-                name: "itens_ordem_servico",
-                schema: "oficina",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
-                    OrdemServicoId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ServicoId = table.Column<Guid>(type: "uuid", nullable: true),
-                    PecaId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Tipo = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    Quantidade = table.Column<decimal>(type: "numeric(12,3)", nullable: false),
-                    Preco = table.Column<decimal>(type: "numeric(12,2)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_itens_ordem_servico", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_itens_ordem_servico_ordens_servico_OrdemServicoId",
-                        column: x => x.OrdemServicoId,
-                        principalSchema: "oficina",
-                        principalTable: "ordens_servico",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_itens_ordem_servico_pecas_PecaId",
-                        column: x => x.PecaId,
-                        principalSchema: "oficina",
-                        principalTable: "pecas",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_itens_ordem_servico_servicos_ServicoId",
-                        column: x => x.ServicoId,
-                        principalSchema: "oficina",
-                        principalTable: "servicos",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
+            //migrationBuilder.CreateTable(
+            //    name: "itens_ordem_servico",
+            //    schema: "oficina",
+            //    columns: table => new
+            //    {
+            //        Id = table.Column<Guid>(type: "uuid", nullable: false, defaultValueSql: "gen_random_uuid()"),
+            //        OrdemServicoId = table.Column<Guid>(type: "uuid", nullable: false),
+            //        ServicoId = table.Column<Guid>(type: "uuid", nullable: true),
+            //        PecaId = table.Column<Guid>(type: "uuid", nullable: true),
+            //        Tipo = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+            //        Quantidade = table.Column<decimal>(type: "numeric(12,3)", nullable: false),
+            //        Preco = table.Column<decimal>(type: "numeric(12,2)", nullable: false)
+            //    },
+            //    constraints: table =>
+            //    {
+            //        //table.PrimaryKey("PK_itens_ordem_servico", x => x.Id);
+            //        //table.ForeignKey(
+            //        //    name: "FK_itens_ordem_servico_ordens_servico_OrdemServicoId",
+            //        //    column: x => x.OrdemServicoId,
+            //        //    principalSchema: "oficina",
+            //        //    principalTable: "ordens_servico",
+            //        //    principalColumn: "Id",
+            //        //    onDelete: ReferentialAction.Cascade);
+            //        //table.ForeignKey(
+            //        //    name: "FK_itens_ordem_servico_pecas_PecaId",
+            //        //    column: x => x.PecaId,
+            //        //    principalSchema: "oficina",
+            //        //    principalTable: "pecas",
+            //        //    principalColumn: "Id",
+            //        //    onDelete: ReferentialAction.Restrict);
+            //        //table.ForeignKey(
+            //        //    name: "FK_itens_ordem_servico_servicos_ServicoId",
+            //        //    column: x => x.ServicoId,
+            //        //    principalSchema: "oficina",
+            //        //    principalTable: "servicos",
+            //        //    principalColumn: "Id",
+            //        //    onDelete: ReferentialAction.Restrict);
+            //    });
 
             migrationBuilder.CreateIndex(
                 name: "IX_clientes_Documento",
@@ -209,59 +209,59 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                 column: "Codigo",
                 unique: true);
 
-            migrationBuilder.CreateIndex(
-                name: "IX_itens_ordem_servico_OrdemServicoId",
-                schema: "oficina",
-                table: "itens_ordem_servico",
-                column: "OrdemServicoId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_itens_ordem_servico_OrdemServicoId",
+            //    schema: "oficina",
+            //    table: "itens_ordem_servico",
+            //    column: "OrdemServicoId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_itens_ordem_servico_PecaId",
-                schema: "oficina",
-                table: "itens_ordem_servico",
-                column: "PecaId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_itens_ordem_servico_PecaId",
+            //    schema: "oficina",
+            //    table: "itens_ordem_servico",
+            //    column: "PecaId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_itens_ordem_servico_ServicoId",
-                schema: "oficina",
-                table: "itens_ordem_servico",
-                column: "ServicoId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_itens_ordem_servico_ServicoId",
+            //    schema: "oficina",
+            //    table: "itens_ordem_servico",
+            //    column: "ServicoId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ordens_servico_ClienteId",
-                schema: "oficina",
-                table: "ordens_servico",
-                column: "ClienteId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_ordens_servico_ClienteId",
+            //    schema: "oficina",
+            //    table: "ordens_servico",
+            //    column: "ClienteId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ordens_servico_MotoId",
-                schema: "oficina",
-                table: "ordens_servico",
-                column: "MotoId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_ordens_servico_MotoId",
+            //    schema: "oficina",
+            //    table: "ordens_servico",
+            //    column: "MotoId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ordens_servico_ProfissionalId",
-                schema: "oficina",
-                table: "ordens_servico",
-                column: "ProfissionalId");
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_ordens_servico_ProfissionalId",
+            //    schema: "oficina",
+            //    table: "ordens_servico",
+            //    column: "ProfissionalId");
 
-            migrationBuilder.CreateIndex(
-                name: "IX_ordens_servico_DataAbertura_Status",
-                schema: "oficina",
-                table: "ordens_servico",
-                columns: new[] { "DataAbertura", "Status" });
+            //migrationBuilder.CreateIndex(
+            //    name: "IX_ordens_servico_DataAbertura_Status",
+            //    schema: "oficina",
+            //    table: "ordens_servico",
+            //    columns: new[] { "DataAbertura", "Status" });
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "itens_ordem_servico",
-                schema: "oficina");
+            //migrationBuilder.DropTable(
+            //    name: "itens_ordem_servico",
+            //    schema: "oficina");
 
-            migrationBuilder.DropTable(
-                name: "ordens_servico",
-                schema: "oficina");
+            //migrationBuilder.DropTable(
+            //    name: "ordens_servico",
+            //    schema: "oficina");
 
             migrationBuilder.DropTable(
                 name: "motos",
