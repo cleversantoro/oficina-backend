@@ -1,15 +1,23 @@
+using System;
 using Microsoft.EntityFrameworkCore;
 using Oficina.Cadastro.Endpoints;
 using Oficina.Cadastro.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Conn string via env var "ConnectionStrings__Default"
-var connectionString = builder.Configuration.GetConnectionString("OficinaDb") ?? builder.Configuration["ConnectionStrings:OficinaDb"];
-builder.Services.AddDbContext<CadastroDbContext>(opt => opt.UseNpgsql(connectionString));
+//Conn string via env var "ConnectionStrings__OficinaDb" ou "ConnectionStrings__Default"
+var connectionString = builder.Configuration.GetConnectionString("OficinaDb")
+                      ?? builder.Configuration["ConnectionStrings:OficinaDb"]
+                      ?? builder.Configuration.GetConnectionString("Default")
+                      ?? builder.Configuration["ConnectionStrings:Default"];
+
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException("Connection string 'OficinaDb' was not found.");
+}
 
 builder.Services.AddDbContext<CadastroDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("OficinaDb"),
+    opt.UseNpgsql(connectionString,
     sql => sql.MigrationsAssembly(typeof(CadastroDbContext).Assembly.FullName))
 );
 
