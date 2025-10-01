@@ -1,0 +1,37 @@
+using Microsoft.EntityFrameworkCore;
+using Oficina.Financeiro.Infrastructure;
+using Oficina.Financeiro.Domain;
+using Oficina.Financeiro.Api;
+using Oficina.Financeiro.Infrastructure.External;
+using FluentValidation;
+
+namespace Oficina.Financeiro;
+
+public static class Endpoints
+{
+    public static void MapFinanceiroEndpoints(this IEndpointRouteBuilder app)
+    {
+        var g = app.MapGroup("/financeiro").WithTags("Financeiro");
+
+        g.MapPost("/pagamentos", async (PagamentoCreateDto dto, FinanceiroDbContext db, IValidator<PagamentoCreateDto> v, IPaymentGatewayClient gateway) => {
+            var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
+            var (ok, tx) = await gateway.ChargeAsync(dto.Meio.ToUpper(), dto.Valor);
+            var p = new Pagamento{ OrdemServicoId=dto.OrdemServicoId, Meio=dto.Meio.ToUpper(), Valor=dto.Valor, Status = ok ? "PAGO" : "FALHA", TransacaoId = tx };
+            db.Pagamentos.Add(p); await db.SaveChangesAsync(); return Results.Created($"/financeiro/pagamentos/{p.Id}", p);
+        }).WithSummary("Cria pagamento e processa no gateway (mock)");
+
+        g.MapPut("/pagamentos/{id:guid}/status", async (Guid id, AtualizaStatusDto dto, FinanceiroDbContext db, IValidator<AtualizaStatusDto> v) => {
+            var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
+            var pg = await db.Pagamentos.FindAsync(id); if (pg is null) return Results.NotFound();
+            pg.Status = dto.Status.ToUpper(); pg.Touch(); await db.SaveChangesAsync(); return Results.Ok(pg);
+        }).WithSummary("Atualiza status do pagamento");
+
+        g.MapPost("/nfe", async (NfeCreateDto dto, FinanceiroDbContext db, IValidator<NfeCreateDto> v, INfeClient nfeClient) => {
+            var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
+            var valor = await db.Pagamentos.Where(p=>p.OrdemServicoId==dto.OrdemServicoId && p.Status=="PAGO").SumAsync(p=>p.Valor);
+            var (ok, numero, chave) = await nfeClient.EmitirAsync(dto.OrdemServicoId, valor);
+            var n = new NFe{ OrdemServicoId=dto.OrdemServicoId, Numero=numero, ChaveAcesso=chave, Status = ok ? "EMITIDA" : "FALHA" };
+            db.NFes.Add(n); await db.SaveChangesAsync(); return Results.Created($"/financeiro/nfe/{n.Id}", n);
+        }).WithSummary("Emite NF-e (mock)");
+    }
+}

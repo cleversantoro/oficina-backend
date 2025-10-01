@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Pomelo.EntityFrameworkCore.MySql" Version="9.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks\Oficina.BuildingBlocks\Oficina.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Modules\Cadastro\Oficina.Cadastro\Oficina.Cadastro.csproj" />
+    <ProjectReference Include="..\Modules\Estoque\Oficina.Estoque\Oficina.Estoque.csproj" />
+    <ProjectReference Include="..\Modules\Financeiro\Oficina.Financeiro\Oficina.Financeiro.csproj" />
+    <ProjectReference Include="..\Modules\OrdemServico\Oficina.OrdemServico\Oficina.OrdemServico.csproj" />
+  </ItemGroup>
+</Project>
