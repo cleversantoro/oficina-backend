@@ -2,11 +2,11 @@ using Oficina.SharedKernel.Domain;
 namespace Oficina.OrdemServico.Domain;
 public class OrdemServico : Entity
 {
-    public Guid ClienteId { get; set; }
-    public Guid MecanicoId { get; set; }
-    public string DescricaoProblema { get; set; } = default!;
+    public Guid Cliente_Id { get; set; }
+    public Guid Mecanico_Id { get; set; }
+    public string Descricao_Problema { get; set; } = default!;
     public string Status { get; set; } = "ABERTA";
-    public DateTime DataAbertura { get; set; } = DateTime.UtcNow;
-    public DateTime? DataConclusao { get; set; }
+    public DateTime Data_Abertura { get; set; } = DateTime.UtcNow;
+    public DateTime? Data_Conclusao { get; set; }
     public List<ItemServico> Itens { get; set; } = new();
 }

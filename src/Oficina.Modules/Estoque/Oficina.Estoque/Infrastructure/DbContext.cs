@@ -12,7 +12,7 @@ public class EstoqueDbContext : DbContext
             e.ToTable("est_pecas");
             e.Property(p=>p.Codigo).HasMaxLength(40).IsRequired();
             e.Property(p=>p.Descricao).HasMaxLength(200).IsRequired();
-            e.Property(p=>p.PrecoUnitario).HasColumnType("decimal(18,2)");
+            e.Property(p=>p.Preco_Unitario).HasColumnType("decimal(18,2)");
             e.HasIndex(p=>p.Codigo).IsUnique();
         });
         modelBuilder.Entity<Movimentacao>(e=>{

@@ -17,7 +17,7 @@ public class FinanceiroDbContext : DbContext
         modelBuilder.Entity<NFe>(e=>{
             e.ToTable("fin_nfes");
             e.Property(p=>p.Numero).HasMaxLength(20).IsRequired();
-            e.Property(p=>p.ChaveAcesso).HasMaxLength(60).IsRequired();
+            e.Property(p=>p.Chave_Acesso).HasMaxLength(60).IsRequired();
         });
     }
 }

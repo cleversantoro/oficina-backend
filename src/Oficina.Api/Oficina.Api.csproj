@@ -14,10 +14,10 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BuildingBlocks\Oficina.BuildingBlocks\Oficina.BuildingBlocks.csproj" />
-    <ProjectReference Include="..\Modules\Cadastro\Oficina.Cadastro\Oficina.Cadastro.csproj" />
-    <ProjectReference Include="..\Modules\Estoque\Oficina.Estoque\Oficina.Estoque.csproj" />
-    <ProjectReference Include="..\Modules\Financeiro\Oficina.Financeiro\Oficina.Financeiro.csproj" />
-    <ProjectReference Include="..\Modules\OrdemServico\Oficina.OrdemServico\Oficina.OrdemServico.csproj" />
+    <ProjectReference Include="..\Oficina.BuildingBlocks\Oficina.BuildingBlocks\Oficina.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Oficina.Modules\Cadastro\Oficina.Cadastro\Oficina.Cadastro.csproj" />
+    <ProjectReference Include="..\Oficina.Modules\Estoque\Oficina.Estoque\Oficina.Estoque.csproj" />
+    <ProjectReference Include="..\Oficina.Modules\Financeiro\Oficina.Financeiro\Oficina.Financeiro.csproj" />
+    <ProjectReference Include="..\Oficina.Modules\OrdemServico\Oficina.OrdemServico\Oficina.OrdemServico.csproj" />
   </ItemGroup>
 </Project>

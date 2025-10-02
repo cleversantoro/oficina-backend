@@ -2,9 +2,9 @@ using Oficina.SharedKernel.Domain;
 namespace Oficina.Financeiro.Domain;
 public class Pagamento : Entity
 {
-    public Guid OrdemServicoId { get; set; }
+    public Guid Ordem_Servico_Id { get; set; }
     public string Meio { get; set; } = default!;
     public decimal Valor { get; set; }
     public string Status { get; set; } = "PENDENTE";
-    public string? TransacaoId { get; set; }
+    public string? Transacao_Id { get; set; }
 }

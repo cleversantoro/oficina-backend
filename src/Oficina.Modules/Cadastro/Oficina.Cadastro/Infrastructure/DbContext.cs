@@ -21,7 +21,7 @@ public class CadastroDbContext : DbContext
         });
         modelBuilder.Entity<Fornecedor>(e=>{
             e.ToTable("cad_fornecedores");
-            e.Property(p=>p.RazaoSocial).HasMaxLength(160).IsRequired();
+            e.Property(p=>p.Razao_Social).HasMaxLength(160).IsRequired();
             e.Property(p=>p.Cnpj).HasMaxLength(20).IsRequired();
             e.HasIndex(p=>p.Cnpj).IsUnique();
         });
