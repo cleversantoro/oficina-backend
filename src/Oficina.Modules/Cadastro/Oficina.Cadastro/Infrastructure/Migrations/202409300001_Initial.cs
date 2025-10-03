@@ -1,5 +1,6 @@
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
-
+using Oficina.Cadastro.Domain;
 #nullable disable
 
 namespace Oficina.Cadastro.Infrastructure.Migrations
@@ -27,25 +28,41 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
                 name: "cad_clientes",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    Created_At = table.Column<DateTime>(nullable: false),
-                    Updated_At = table.Column<DateTime>(nullable: true),
-                    Nome = table.Column<string>(maxLength: 160, nullable: false),
-                    Documento = table.Column<string>(maxLength: 20, nullable: false),
-                    Telefone = table.Column<string>(maxLength: 20, nullable: false),
-                    Email = table.Column<string>(maxLength: 160, nullable: false),
-                    Origem_Id = table.Column<Guid>(nullable: true)
+                    id = table.Column<Guid>(nullable: false),
+                    tenant_id = table.Column<Guid>(nullable: false),
+                    nome = table.Column<string>(maxLength: 120, nullable: false),
+                    nome_exibicao = table.Column<string>(maxLength: 160, nullable: false),
+                    documento = table.Column<string>(maxLength: 20, nullable: false),
+                    pessoa_tipo = table.Column<short>(nullable: false),
+                    status = table.Column<short>(nullable: false, defaultValue: (short)ClienteStatus.Ativo),
+                    cliente_vip = table.Column<bool>(nullable: false, defaultValue: false),
+                    origem_cadastro_id = table.Column<int>(nullable: false),
+                    telefone = table.Column<string>(maxLength: 20, nullable: false),
+                    email = table.Column<string>(maxLength: 160, nullable: false),
+                    created_at = table.Column<DateTime>(type: "datetime(6)", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP(6)"),
+                    updated_at = table.Column<DateTime>(type: "datetime(6)", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6)"),
+                    deleted_at = table.Column<DateTime>(type: "datetime(6)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_cad_clientes", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_cad_clientes_cad_clientes_origens_Origem_Id",
-                        column: x => x.Origem_Id,
-                        principalTable: "cad_clientes_origens",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.SetNull);
+                    table.PrimaryKey("PK_cad_clientes", x => x.id);
                 });
+
+            migrationBuilder.CreateIndex(
+                name: "ux_cad_clientes_documento",
+                table: "cad_clientes",
+                column: "documento",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_cad_clientes_status",
+                table: "cad_clientes",
+                column: "status");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_cad_clientes_origem",
+                table: "cad_clientes",
+                column: "origem_cadastro_id");
 
             migrationBuilder.CreateTable(
                 name: "cad_clientes_pf",
@@ -515,6 +532,17 @@ namespace Oficina.Cadastro.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "cad_veiculos_marcas");
+        }
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "cad_clientes");
+
+            migrationBuilder.DropTable(
+                name: "cad_mecanicos");
+
+            migrationBuilder.DropTable(
+                name: "cad_fornecedores");
         }
     }
 }
