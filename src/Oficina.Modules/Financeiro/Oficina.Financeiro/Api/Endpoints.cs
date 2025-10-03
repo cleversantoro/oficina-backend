@@ -23,7 +23,7 @@ public static class Endpoints
             db.Pagamentos.Add(p); await db.SaveChangesAsync(); return Results.Created($"/financeiro/pagamentos/{p.Id}", p);
         }).WithSummary("Cria pagamento e processa no gateway (mock)");
 
-        g.MapPut("/pagamentos/{id:guid}/status", async (Guid id, AtualizaStatusDto dto, FinanceiroDbContext db, IValidator<AtualizaStatusDto> v) => {
+        g.MapPut("/pagamentos/{id:long}/status", async (long id, AtualizaStatusDto dto, FinanceiroDbContext db, IValidator<AtualizaStatusDto> v) => {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
             var pg = await db.Pagamentos.FindAsync(id); if (pg is null) return Results.NotFound();
             pg.Status = dto.Status.ToUpper(); pg.Touch(); await db.SaveChangesAsync(); return Results.Ok(pg);

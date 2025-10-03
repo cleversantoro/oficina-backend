@@ -6,5 +6,5 @@ public class Peca : Entity
     public string Descricao { get; set; } = default!;
     public decimal Preco_Unitario { get; set; }
     public int Quantidade { get; set; }
-    public Guid? Fornecedor_Id { get; set; }
+    public long? Fornecedor_Id { get; set; }
 }
