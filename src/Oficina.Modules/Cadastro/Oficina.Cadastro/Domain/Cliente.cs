@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Oficina.SharedKernel.Domain;
 
 namespace Oficina.Cadastro.Domain;

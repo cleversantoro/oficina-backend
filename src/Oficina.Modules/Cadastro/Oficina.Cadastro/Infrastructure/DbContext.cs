@@ -1,12 +1,28 @@
 using Microsoft.EntityFrameworkCore;
 using Oficina.Cadastro.Domain;
+
 namespace Oficina.Cadastro.Infrastructure;
+
 public class CadastroDbContext : DbContext
 {
     public CadastroDbContext(DbContextOptions<CadastroDbContext> options) : base(options) { }
+
     public DbSet<Cliente> Clientes => Set<Cliente>();
+    public DbSet<ClienteOrigem> ClienteOrigens => Set<ClienteOrigem>();
+    public DbSet<PessoaPf> PessoasPf => Set<PessoaPf>();
+    public DbSet<PessoaPj> PessoasPj => Set<PessoaPj>();
+    public DbSet<ClienteEndereco> ClienteEnderecos => Set<ClienteEndereco>();
+    public DbSet<ClienteContato> ClienteContatos => Set<ClienteContato>();
+    public DbSet<ClienteIndicacao> ClienteIndicacoes => Set<ClienteIndicacao>();
+    public DbSet<ClienteLgpdConsentimento> ClienteLgpdConsentimentos => Set<ClienteLgpdConsentimento>();
+    public DbSet<ClienteFinanceiro> ClienteFinanceiro => Set<ClienteFinanceiro>();
+    public DbSet<VeiculoMarca> VeiculoMarcas => Set<VeiculoMarca>();
+    public DbSet<VeiculoModelo> VeiculoModelos => Set<VeiculoModelo>();
+    public DbSet<Veiculo> Veiculos => Set<Veiculo>();
+    public DbSet<ClienteAnexo> ClienteAnexos => Set<ClienteAnexo>();
     public DbSet<Mecanico> Mecanicos => Set<Mecanico>();
     public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Cliente>(e=>{
