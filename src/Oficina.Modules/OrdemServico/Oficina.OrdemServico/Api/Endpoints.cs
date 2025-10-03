@@ -25,7 +25,7 @@ public static class Endpoints
             db.Ordens.Add(os); await db.SaveChangesAsync(); return Results.Created($"/ordens/{os.Id}", os);
         }).WithSummary("Cria OS");
 
-        g.MapPost("/{id:guid}/itens", async (Guid id, ItemCreateDto dto, OrdemServicoDbContext db, IValidator<ItemCreateDto> v) =>
+        g.MapPost("/{id:long}/itens", async (long id, ItemCreateDto dto, OrdemServicoDbContext db, IValidator<ItemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
             if (await db.Ordens.FindAsync(id) is null) return Results.NotFound("OS não encontrada");
@@ -33,7 +33,7 @@ public static class Endpoints
             db.Itens.Add(item); await db.SaveChangesAsync(); return Results.Created($"/ordens/{id}/itens/{item.Id}", item);
         }).WithSummary("Adiciona item na OS");
 
-        g.MapPut("/{id:guid}/status", async (Guid id, string status, OrdemServicoDbContext db) =>
+        g.MapPut("/{id:long}/status", async (long id, string status, OrdemServicoDbContext db) =>
         {
             var os = await db.Ordens.FindAsync(id); if (os is null) return Results.NotFound();
             os.Status = status.ToUpper(); if (os.Status=="CONCLUIDA") os.Data_Conclusao=DateTime.UtcNow; os.Touch();

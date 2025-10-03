@@ -17,7 +17,7 @@ public static class Endpoints
 
         g.MapGet("/clientes", async (CadastroDbContext db) => Results.Ok(await db.Clientes.AsNoTracking().ToListAsync())).WithSummary("Lista clientes");
         
-        g.MapGet("/clientes/{id:guid}", async (Guid id, CadastroDbContext db) =>
+        g.MapGet("/clientes/{id:long}", async (long id, CadastroDbContext db) =>
             await db.Clientes.FindAsync(id) is { } c ? Results.Ok(c) : Results.NotFound()).WithSummary("Obtém cliente por Id");
         
         g.MapPost("/clientes", async (ClienteCreateDto dto, CadastroDbContext db, IValidator<ClienteCreateDto> v) => {
@@ -26,14 +26,14 @@ public static class Endpoints
             db.Clientes.Add(c); await db.SaveChangesAsync(); return Results.Created($"/cadastro/clientes/{c.Id}", c);
         }).WithSummary("Cria cliente");
         
-        g.MapPut("/clientes/{id:guid}", async (Guid id, ClienteCreateDto dto, CadastroDbContext db, IValidator<ClienteCreateDto> v) => {
+        g.MapPut("/clientes/{id:long}", async (long id, ClienteCreateDto dto, CadastroDbContext db, IValidator<ClienteCreateDto> v) => {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
             var c = await db.Clientes.FindAsync(id); if (c is null) return Results.NotFound();
             c.Nome = dto.Nome; c.Documento = dto.Documento; c.Telefone = dto.Telefone; c.Email = dto.Email; c.Touch();
             await db.SaveChangesAsync(); return Results.Ok(c);
         }).WithSummary("Atualiza cliente");
         
-        g.MapDelete("/clientes/{id:guid}", async (Guid id, CadastroDbContext db) => {
+        g.MapDelete("/clientes/{id:long}", async (long id, CadastroDbContext db) => {
             var c = await db.Clientes.FindAsync(id); if (c is null) return Results.NotFound();
             db.Remove(c); await db.SaveChangesAsync(); return Results.NoContent();
         }).WithSummary("Exclui cliente");
