@@ -67,7 +67,8 @@ public class ClienteVeiculoDtoValidator : AbstractValidator<ClienteVeiculoDto>
     {
         RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
         RuleFor(x => x.Marca).MaximumLength(80);
-        RuleFor(x => x.Modelo).MaximumLength(120);
+        RuleFor(x => x.ModeloNome).MaximumLength(160);
+        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
         RuleFor(x => x.Cor).MaximumLength(60);
         RuleFor(x => x.Chassi).MaximumLength(30);
         RuleFor(x => x.Ano).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano.HasValue);
@@ -92,7 +93,7 @@ public class ClienteCreateValidator : AbstractValidator<ClienteCreateDto>
         RuleFor(x => x.Nome).NotEmpty().MaximumLength(180);
         RuleFor(x => x.Tipo).IsInEnum();
         RuleFor(x => x.Status).IsInEnum();
-        RuleFor(x => x.Origem).IsInEnum();
+        RuleFor(x => x.OrigemId).GreaterThan(0);
         RuleFor(x => x.Observacoes).MaximumLength(500);
 
         RuleFor(x => x.PessoaFisica)
@@ -157,7 +158,7 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
         RuleFor(x => x.Nome).NotEmpty().MaximumLength(180);
         RuleFor(x => x.Tipo).IsInEnum();
         RuleFor(x => x.Status).IsInEnum();
-        RuleFor(x => x.Origem).IsInEnum();
+        RuleFor(x => x.OrigemId).GreaterThan(0);
         RuleFor(x => x.Observacoes).MaximumLength(500);
 
         RuleFor(x => x.PessoaFisica)
@@ -186,10 +187,10 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
             RuleForEach(x => x.Contatos!).SetValidator(new ClienteContatoDtoValidator());
         });
 
-        When(x => x.Consentimentos is { Count: > 0 }, () =>
-        {
-            RuleForEach(x => x.Consentimentos!).SetValidator(new ClienteConsentimentoDtoValidator());
-        });
+        //When(x => x.Consentimentos is { Count: > 0 }, () =>
+        //{
+        //    RuleForEach(x => x.Consentimentos!).SetValidator(new ClienteConsentimentoDtoValidator());
+        //});
 
         When(x => x.Veiculos is { Count: > 0 }, () =>
         {

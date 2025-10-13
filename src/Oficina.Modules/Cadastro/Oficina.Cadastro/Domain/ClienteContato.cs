@@ -5,10 +5,11 @@ namespace Oficina.Cadastro.Domain;
 
 public class ClienteContato : Entity
 {
-    public Guid Cliente_Id { get; set; }
+    public long Cliente_Id { get; set; }
     public Cliente Cliente { get; set; } = default!;
-    public string Tipo { get; set; } = "Telefone";
+
+    public ClienteContatoTipo Tipo { get; set; }
     public string Valor { get; set; } = default!;
-    public string? Observacao { get; set; }
     public bool Principal { get; set; }
+    public string? Observacao { get; set; }
 }

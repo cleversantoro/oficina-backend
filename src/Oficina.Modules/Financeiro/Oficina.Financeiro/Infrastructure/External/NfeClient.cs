@@ -1,11 +1,13 @@
+using System;
+
 namespace Oficina.Financeiro.Infrastructure.External;
 public interface INfeClient
 {
-    Task<(bool success, string numero, string chave)> EmitirAsync(Guid ordemServicoId, decimal valor);
+    Task<(bool success, string numero, string chave)> EmitirAsync(long ordemServicoId, decimal valor);
 }
 public class FakeNfeClient : INfeClient
 {
-    public Task<(bool success, string numero, string chave)> EmitirAsync(Guid ordemServicoId, decimal valor)
+    public Task<(bool success, string numero, string chave)> EmitirAsync(long ordemServicoId, decimal valor)
     {
         var numero = $"NFE{DateTime.UtcNow:yyyyMMddHHmmss}";
         var chave = $"CH{Guid.NewGuid():N}".ToUpper();

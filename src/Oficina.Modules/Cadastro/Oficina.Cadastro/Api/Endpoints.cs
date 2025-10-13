@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -19,7 +20,10 @@ public static class Endpoints
 
         g.MapGet("/clientes", async ([AsParameters] ClienteFiltroDto filtro, CadastroDbContext db) =>
         {
-            var query = db.Clientes.AsNoTracking().AsQueryable();
+            var query = db.Clientes
+                .AsNoTracking()
+                .Include(c => c.Origem)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(filtro.Nome))
             {
@@ -37,9 +41,9 @@ public static class Endpoints
                 query = query.Where(c => c.Tipo == filtro.Tipo);
             }
 
-            if (filtro.Origem is not null)
+            if (filtro.OrigemId is not null)
             {
-                query = query.Where(c => c.Origem == filtro.Origem);
+                query = query.Where(c => c.Origem_Id == filtro.OrigemId);
             }
 
             if (filtro.Vip is not null)
@@ -49,7 +53,7 @@ public static class Endpoints
 
             var result = await query
                 .OrderBy(c => c.Nome)
-                .Select(c => new ClienteResumoDto(c.Codigo, c.Id, c.Nome, c.Status, c.Origem, c.Vip, c.Tipo))
+                .Select(c => new ClienteResumoDto(c.Codigo, c.Id, c.Nome, c.Status, ToOrigemDto(c.Origem), c.Vip, c.Tipo))
                 .ToListAsync();
 
             return Results.Ok(result);
@@ -69,6 +73,11 @@ public static class Endpoints
                 return Results.ValidationProblem(validation.ToDictionary());
             }
 
+            if (!await db.ClienteOrigens.AnyAsync(o => o.Id == dto.OrigemId))
+            {
+                return Results.BadRequest("Origem informada não existe.");
+            }
+
             var cliente = MapToEntity(dto);
 
             await using var transaction = await db.Database.BeginTransactionAsync();
@@ -86,6 +95,11 @@ public static class Endpoints
             if (!validation.IsValid)
             {
                 return Results.ValidationProblem(validation.ToDictionary());
+            }
+
+            if (!await db.ClienteOrigens.AnyAsync(o => o.Id == dto.OrigemId))
+            {
+                return Results.BadRequest("Origem informada não existe.");
             }
 
             var cliente = await CarregarClientePorCodigo(db, id, track: true);
@@ -157,11 +171,21 @@ public static class Endpoints
         var cliente = new Cliente
         {
             Nome = dto.Nome,
+            NomeExibicao = dto.Nome,
             Tipo = dto.Tipo,
             Status = dto.Status,
-            Origem = dto.Origem,
+            Origem_Id = dto.OrigemId,
             Vip = dto.Vip,
-            Observacoes = dto.Observacoes
+            Observacoes = dto.Observacoes,
+            Telefone = string.Empty,
+            Email = string.Empty
+        };
+
+        cliente.Documento = dto.Tipo switch
+        {
+            ClienteTipo.PessoaFisica => dto.PessoaFisica?.Cpf ?? string.Empty,
+            ClienteTipo.PessoaJuridica => dto.PessoaJuridica?.Cnpj ?? string.Empty,
+            _ => string.Empty
         };
 
         if (dto.PessoaFisica is not null && dto.Tipo == ClienteTipo.PessoaFisica)
@@ -213,22 +237,40 @@ public static class Endpoints
             Observacao = c.Observacao
         }).ToList() ?? new List<ClienteContato>();
 
-        cliente.Consentimentos = dto.Consentimentos?.Select(c => new ClienteConsentimento
+        if (cliente.Contatos.FirstOrDefault(c => c.Principal) is { } contatoPrincipal)
         {
-            Cliente_Id = cliente.Id,
-            Tipo = c.Tipo,
-            Aceito = c.Aceito,
-            Data = c.Data,
-            Valido_Ate = c.ValidoAte,
-            Observacoes = c.Observacoes
-        }).ToList() ?? new List<ClienteConsentimento>();
+            cliente.Telefone = contatoPrincipal.Valor;
+        }
+        else if (cliente.Contatos.FirstOrDefault() is { } primeiroContato)
+        {
+            cliente.Telefone = primeiroContato.Valor;
+        }
+
+        cliente.Email = cliente.Contatos
+            .Where(c => c.Tipo == ClienteContatoTipo.Email)
+            .Select(c => c.Valor)
+            .FirstOrDefault() ?? cliente.Email;
+
+        if (dto.Consentimentos?.FirstOrDefault() is { } consentimento)
+        {
+            cliente.Consentimento = new ClienteConsentimento
+            {
+                Cliente_Id = cliente.Id,
+                Tipo = consentimento.Tipo,
+                Aceito = consentimento.Aceito,
+                Data = consentimento.Data,
+                Valido_Ate = consentimento.ValidoAte,
+                Observacoes = consentimento.Observacoes,
+                Canal = "API"
+            };
+        }
 
         cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
         {
             Cliente_Id = cliente.Id,
             Placa = v.Placa,
             Marca = v.Marca,
-            Modelo = v.Modelo,
+            Modelo_Id = v.ModeloId,
             Ano = v.Ano,
             Cor = v.Cor,
             Chassi = v.Chassi,
@@ -250,11 +292,18 @@ public static class Endpoints
     private static void AtualizarCliente(Cliente cliente, ClienteUpdateDto dto, CadastroDbContext db)
     {
         cliente.Nome = dto.Nome;
+        cliente.NomeExibicao = dto.Nome;
         cliente.Tipo = dto.Tipo;
         cliente.Status = dto.Status;
-        cliente.Origem = dto.Origem;
+        cliente.Origem_Id = dto.OrigemId;
         cliente.Vip = dto.Vip;
         cliente.Observacoes = dto.Observacoes;
+        cliente.Documento = dto.Tipo switch
+        {
+            ClienteTipo.PessoaFisica => dto.PessoaFisica?.Cpf ?? cliente.Documento,
+            ClienteTipo.PessoaJuridica => dto.PessoaJuridica?.Cnpj ?? cliente.Documento,
+            _ => cliente.Documento
+        };
         cliente.Touch();
 
         if (dto.Tipo == ClienteTipo.PessoaFisica)
@@ -295,7 +344,7 @@ public static class Endpoints
             }
         }
 
-        db.ClientesEnderecos.RemoveRange(cliente.Enderecos);
+        db.ClienteEnderecos.RemoveRange(cliente.Enderecos);
         cliente.Enderecos = dto.Enderecos?.Select(e => new ClienteEndereco
         {
             Cliente_Id = cliente.Id,
@@ -311,7 +360,7 @@ public static class Endpoints
             Principal = e.Principal
         }).ToList() ?? new List<ClienteEndereco>();
 
-        db.ClientesContatos.RemoveRange(cliente.Contatos);
+        db.ClienteContatos.RemoveRange(cliente.Contatos);
         cliente.Contatos = dto.Contatos?.Select(c => new ClienteContato
         {
             Cliente_Id = cliente.Id,
@@ -321,16 +370,39 @@ public static class Endpoints
             Observacao = c.Observacao
         }).ToList() ?? new List<ClienteContato>();
 
-        db.ClientesConsentimentos.RemoveRange(cliente.Consentimentos);
-        cliente.Consentimentos = dto.Consentimentos?.Select(c => new ClienteConsentimento
+        if (cliente.Contatos.FirstOrDefault(c => c.Principal) is { } contatoPrincipal)
         {
-            Cliente_Id = cliente.Id,
-            Tipo = c.Tipo,
-            Aceito = c.Aceito,
-            Data = c.Data,
-            Valido_Ate = c.ValidoAte,
-            Observacoes = c.Observacoes
-        }).ToList() ?? new List<ClienteConsentimento>();
+            cliente.Telefone = contatoPrincipal.Valor;
+        }
+        else if (cliente.Contatos.FirstOrDefault() is { } primeiroContato)
+        {
+            cliente.Telefone = primeiroContato.Valor;
+        }
+
+        cliente.Email = cliente.Contatos
+            .Where(c => c.Tipo == ClienteContatoTipo.Email)
+            .Select(c => c.Valor)
+            .FirstOrDefault() ?? cliente.Email;
+
+        if (dto.Consentimento is not null)
+        {
+            if (cliente.Consentimento is null)
+            {
+                cliente.Consentimento = new ClienteConsentimento { Cliente_Id = cliente.Id };
+            }
+
+            cliente.Consentimento.Tipo = dto.Consentimento.Tipo;
+            cliente.Consentimento.Aceito = dto.Consentimento.Aceito;
+            cliente.Consentimento.Data = dto.Consentimento.Data;
+            cliente.Consentimento.Valido_Ate = dto.Consentimento.ValidoAte;
+            cliente.Consentimento.Observacoes = dto.Consentimento.Observacoes;
+            cliente.Consentimento.Canal = "API";
+        }
+        else if (cliente.Consentimento is not null)
+        {
+            db.ClienteConsentimentos.Remove(cliente.Consentimento);
+            cliente.Consentimento = null;
+        }
 
         db.ClientesVeiculos.RemoveRange(cliente.Veiculos);
         cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
@@ -338,14 +410,14 @@ public static class Endpoints
             Cliente_Id = cliente.Id,
             Placa = v.Placa,
             Marca = v.Marca,
-            Modelo = v.Modelo,
+            Modelo_Id = v.ModeloId,
             Ano = v.Ano,
             Cor = v.Cor,
             Chassi = v.Chassi,
             Principal = v.Principal
         }).ToList() ?? new List<ClienteVeiculo>();
 
-        db.ClientesAnexos.RemoveRange(cliente.Anexos);
+        db.ClienteAnexos.RemoveRange(cliente.Anexos);
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
         {
             Cliente_Id = cliente.Id,
@@ -363,9 +435,10 @@ public static class Endpoints
             .Include(c => c.PessoaJuridica)
             .Include(c => c.Enderecos)
             .Include(c => c.Contatos)
-            .Include(c => c.Consentimentos)
+            .Include(c => c.Consentimento)
             .Include(c => c.Veiculos)
             .Include(c => c.Anexos)
+            .Include(c => c.Origem)
             .Where(c => c.Codigo == codigo);
 
         if (!track)
@@ -376,47 +449,45 @@ public static class Endpoints
         return await query.FirstOrDefaultAsync();
     }
 
-    private static async Task<Cliente?> CarregarClientePorId(CadastroDbContext db, Guid id)
+    private static async Task<Cliente?> CarregarClientePorId(CadastroDbContext db, long id)
     {
         return await db.Clientes
             .Include(c => c.PessoaFisica)
             .Include(c => c.PessoaJuridica)
             .Include(c => c.Enderecos)
             .Include(c => c.Contatos)
-            .Include(c => c.Consentimentos)
+            .Include(c => c.Consentimento)
             .Include(c => c.Veiculos)
             .Include(c => c.Anexos)
+            .Include(c => c.Origem)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
     }
 
+    private static ClienteOrigemDto? ToOrigemDto(ClienteOrigem? origem) =>
+        origem is null ? null : new ClienteOrigemDto(origem.Id, origem.Nome, origem.Descricao);
+
     private static ClienteDetalhesDto MapToDetalhesDto(Cliente cliente)
     {
-        return new ClienteDetalhesDto(
-            cliente.Codigo,
-            cliente.Id,
-            cliente.Nome,
-            cliente.Tipo,
-            cliente.Status,
-            cliente.Origem,
-            cliente.Vip,
-            cliente.Observacoes,
-            cliente.PessoaFisica is null
-                ? null
-                : new ClientePessoaFisicaDto(
-                    cliente.PessoaFisica.Cpf,
-                    cliente.PessoaFisica.Rg,
-                    cliente.PessoaFisica.Data_Nascimento,
-                    cliente.PessoaFisica.Genero),
-            cliente.PessoaJuridica is null
-                ? null
-                : new ClientePessoaJuridicaDto(
-                    cliente.PessoaJuridica.Cnpj,
-                    cliente.PessoaJuridica.Razao_Social,
-                    cliente.PessoaJuridica.Nome_Fantasia,
-                    cliente.PessoaJuridica.Inscricao_Estadual,
-                    cliente.PessoaJuridica.Responsavel),
-            cliente.Enderecos.Select(e => new ClienteEnderecoDto(
+        var pessoaFisica = cliente.PessoaFisica is null
+            ? null
+            : new ClientePessoaFisicaDto(
+                cliente.PessoaFisica.Cpf,
+                cliente.PessoaFisica.Rg,
+                cliente.PessoaFisica.Data_Nascimento,
+                cliente.PessoaFisica.Genero);
+
+        var pessoaJuridica = cliente.PessoaJuridica is null
+            ? null
+            : new ClientePessoaJuridicaDto(
+                cliente.PessoaJuridica.Cnpj,
+                cliente.PessoaJuridica.Razao_Social,
+                cliente.PessoaJuridica.Nome_Fantasia,
+                cliente.PessoaJuridica.Inscricao_Estadual,
+                cliente.PessoaJuridica.Responsavel);
+
+        var enderecos = cliente.Enderecos
+            .Select(e => new ClienteEnderecoDto(
                 e.Tipo,
                 e.Cep,
                 e.Logradouro,
@@ -426,11 +497,56 @@ public static class Endpoints
                 e.Estado,
                 e.Pais,
                 e.Complemento,
-                e.Principal)).ToList(),
-            cliente.Contatos.Select(c => new ClienteContatoDto(c.Tipo, c.Valor, c.Principal, c.Observacao)).ToList(),
-            cliente.Consentimentos.Select(c => new ClienteConsentimentoDto(c.Tipo, c.Aceito, c.Data, c.Valido_Ate, c.Observacoes)).ToList(),
-            cliente.Veiculos.Select(v => new ClienteVeiculoDto(v.Placa, v.Marca, v.Modelo, v.Ano, v.Cor, v.Chassi, v.Principal)).ToList(),
-            cliente.Anexos.Select(a => new ClienteAnexoDto(a.Nome, a.Tipo, a.Url, a.Observacao)).ToList()
-        );
+                e.Principal))
+            .ToList();
+
+        var contatos = cliente.Contatos
+            .Select(c => new ClienteContatoDto(c.Tipo, c.Valor, c.Principal, c.Observacao))
+            .ToList();
+
+        var consentimentos = cliente.Consentimento is null
+            ? Array.Empty<ClienteConsentimentoDto>()
+            : new[]
+            {
+                new ClienteConsentimentoDto(
+                    cliente.Consentimento.Tipo,
+                    cliente.Consentimento.Aceito,
+                    cliente.Consentimento.Data,
+                    cliente.Consentimento.Valido_Ate,
+                    cliente.Consentimento.Observacoes)
+            };
+
+        var veiculos = cliente.Veiculos
+            .Select(v => new ClienteVeiculoDto(
+                v.Placa,
+                v.Marca,
+                v.Modelo_Id,
+                v.Modelo?.Nome,
+                v.Ano,
+                v.Cor,
+                v.Chassi,
+                v.Principal))
+            .ToList();
+
+        var anexos = cliente.Anexos
+            .Select(a => new ClienteAnexoDto(a.Nome, a.Tipo, a.Url, a.Observacao))
+            .ToList();
+
+        return new ClienteDetalhesDto(
+            cliente.Codigo,
+            cliente.Id,
+            cliente.Nome,
+            cliente.Tipo,
+            cliente.Status,
+            ToOrigemDto(cliente.Origem),
+            cliente.Vip,
+            cliente.Observacoes,
+            pessoaFisica,
+            pessoaJuridica,
+            enderecos,
+            contatos,
+            consentimentos,
+            veiculos,
+            anexos);
     }
 }

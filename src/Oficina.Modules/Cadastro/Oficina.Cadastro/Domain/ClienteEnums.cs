@@ -13,13 +13,13 @@ public enum ClienteStatus
     Suspenso = 3
 }
 
-public enum ClienteOrigem
-{
-    Presencial = 1,
-    Online = 2,
-    Indicacao = 3,
-    Outro = 4
-}
+//public enum ClienteOrigem
+//{
+//    Presencial = 1,
+//    Online = 2,
+//    Indicacao = 3,
+//    Outro = 4
+//}
 
 public enum ClienteEnderecoTipo
 {
