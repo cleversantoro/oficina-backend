@@ -4,7 +4,7 @@ namespace Oficina.Cadastro.Domain;
 
 public class ClienteConsentimento : Entity
 {
-    public long ClienteId { get; set; }
+    public long Cliente_Id { get; set; }
     public Cliente Cliente { get; set; } = default!;
     public ClienteConsentimentoTipo Tipo { get; set; }
     public bool Aceito { get; set; }

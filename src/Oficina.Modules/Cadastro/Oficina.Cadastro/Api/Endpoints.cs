@@ -192,7 +192,7 @@ public static class Endpoints
         {
             cliente.PessoaFisica = new ClientePessoaFisica
             {
-                ClienteId = cliente.Id,
+                Cliente_Id = cliente.Id,
                 Cpf = dto.PessoaFisica.Cpf,
                 Rg = dto.PessoaFisica.Rg,
                 Data_Nascimento = dto.PessoaFisica.DataNascimento,
@@ -204,7 +204,7 @@ public static class Endpoints
         {
             cliente.PessoaJuridica = new ClientePessoaJuridica
             {
-                ClienteId = cliente.Id,
+                Cliente_Id = cliente.Id,
                 Cnpj = dto.PessoaJuridica.Cnpj,
                 Razao_Social = dto.PessoaJuridica.RazaoSocial,
                 Nome_Fantasia = dto.PessoaJuridica.NomeFantasia,
@@ -215,7 +215,7 @@ public static class Endpoints
 
         cliente.Enderecos = dto.Enderecos?.Select(e => new ClienteEndereco
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Tipo = e.Tipo,
             Cep = e.Cep,
             Logradouro = e.Logradouro,
@@ -230,7 +230,7 @@ public static class Endpoints
 
         cliente.Contatos = dto.Contatos?.Select(c => new ClienteContato
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Tipo = c.Tipo,
             Valor = c.Valor,
             Principal = c.Principal,
@@ -255,7 +255,7 @@ public static class Endpoints
         {
             cliente.Consentimento = new ClienteConsentimento
             {
-                ClienteId = cliente.Id,
+                Cliente_Id = cliente.Id,
                 Tipo = consentimento.Tipo,
                 Aceito = consentimento.Aceito,
                 Data = consentimento.Data,
@@ -267,7 +267,7 @@ public static class Endpoints
 
         cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Placa = v.Placa,
             Marca = v.Marca,
             Modelo_Id = v.ModeloId,
@@ -279,7 +279,7 @@ public static class Endpoints
 
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Nome = a.Nome,
             Tipo = a.Tipo,
             Url = a.Url,
@@ -310,7 +310,7 @@ public static class Endpoints
         {
             if (cliente.PessoaFisica is null)
             {
-                cliente.PessoaFisica = new ClientePessoaFisica { ClienteId = cliente.Id };
+                cliente.PessoaFisica = new ClientePessoaFisica { Cliente_Id = cliente.Id };
             }
 
             cliente.PessoaFisica.Cpf = dto.PessoaFisica!.Cpf;
@@ -328,7 +328,7 @@ public static class Endpoints
         {
             if (cliente.PessoaJuridica is null)
             {
-                cliente.PessoaJuridica = new ClientePessoaJuridica { ClienteId = cliente.Id };
+                cliente.PessoaJuridica = new ClientePessoaJuridica { Cliente_Id = cliente.Id };
             }
 
             cliente.PessoaJuridica.Cnpj = dto.PessoaJuridica!.Cnpj;
@@ -347,7 +347,7 @@ public static class Endpoints
         db.ClienteEnderecos.RemoveRange(cliente.Enderecos);
         cliente.Enderecos = dto.Enderecos?.Select(e => new ClienteEndereco
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Tipo = e.Tipo,
             Cep = e.Cep,
             Logradouro = e.Logradouro,
@@ -363,7 +363,7 @@ public static class Endpoints
         db.ClienteContatos.RemoveRange(cliente.Contatos);
         cliente.Contatos = dto.Contatos?.Select(c => new ClienteContato
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Tipo = c.Tipo,
             Valor = c.Valor,
             Principal = c.Principal,
@@ -388,7 +388,7 @@ public static class Endpoints
         {
             if (cliente.Consentimento is null)
             {
-                cliente.Consentimento = new ClienteConsentimento { ClienteId = cliente.Id };
+                cliente.Consentimento = new ClienteConsentimento { Cliente_Id = cliente.Id };
             }
 
             cliente.Consentimento.Tipo = dto.Consentimento.Tipo;
@@ -407,7 +407,7 @@ public static class Endpoints
         db.ClientesVeiculos.RemoveRange(cliente.Veiculos);
         cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Placa = v.Placa,
             Marca = v.Marca,
             Modelo_Id = v.ModeloId,
@@ -420,7 +420,7 @@ public static class Endpoints
         db.ClienteAnexos.RemoveRange(cliente.Anexos);
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
         {
-            ClienteId = cliente.Id,
+            Cliente_Id = cliente.Id,
             Nome = a.Nome,
             Tipo = a.Tipo,
             Url = a.Url,

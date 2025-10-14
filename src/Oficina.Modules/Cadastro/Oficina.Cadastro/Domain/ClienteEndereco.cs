@@ -5,7 +5,7 @@ namespace Oficina.Cadastro.Domain;
 
 public class ClienteEndereco : Entity
 {
-    public long ClienteId { get; set; }
+    public long Cliente_Id { get; set; }
     public Cliente Cliente { get; set; } = default!;
     public ClienteEnderecoTipo Tipo { get; set; }
     public string Logradouro { get; set; } = default!;

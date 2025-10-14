@@ -4,7 +4,7 @@ namespace Oficina.Cadastro.Domain;
 
 public class ClientePessoaJuridica : Entity
 {
-    public long ClienteId { get; set; }
+    public long Cliente_Id { get; set; }
     public string Cnpj { get; set; } = default!;
     public string Razao_Social { get; set; } = default!;
     public string? Nome_Fantasia { get; set; }

@@ -2,7 +2,7 @@
 namespace Oficina.OrdemServico.Domain;
 public class OrdemServico : Entity
 {
-    public long ClienteId { get; set; }
+    public long Cliente_Id { get; set; }
     public long Mecanico_Id { get; set; }
     public string Descricao_Problema { get; set; } = default!;
     public string Status { get; set; } = "ABERTA";

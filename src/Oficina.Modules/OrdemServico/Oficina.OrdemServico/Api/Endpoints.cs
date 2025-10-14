@@ -21,7 +21,7 @@ public static class Endpoints
         g.MapPost("/", async (OrdemCreateDto dto, OrdemServicoDbContext db, IValidator<OrdemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            var os = new OrdemServico.Domain.OrdemServico{ ClienteId=dto.ClienteId, Mecanico_Id=dto.MecanicoId, Descricao_Problema=dto.DescricaoProblema };
+            var os = new OrdemServico.Domain.OrdemServico{ Cliente_Id=dto.Cliente_Id, Mecanico_Id=dto.MecanicoId, Descricao_Problema=dto.DescricaoProblema };
             db.Ordens.Add(os); await db.SaveChangesAsync(); return Results.Created($"/ordens/{os.Id}", os);
         }).WithSummary("Cria OS");
 
