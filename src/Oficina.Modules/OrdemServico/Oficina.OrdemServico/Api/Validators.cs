@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 namespace Oficina.OrdemServico.Api;
 public class OrdemCreateValidator : AbstractValidator<OrdemCreateDto>
 {
@@ -19,3 +19,4 @@ public class ItemCreateValidator : AbstractValidator<ItemCreateDto>
         RuleFor(x=>x.PecaId).GreaterThan(0).When(x=>x.PecaId.HasValue);
     }
 }
+

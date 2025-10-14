@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using FluentValidation;
 using Oficina.Cadastro.Domain;
 
@@ -8,7 +8,7 @@ public class ClientePessoaFisicaDtoValidator : AbstractValidator<ClientePessoaFi
 {
     public ClientePessoaFisicaDtoValidator()
     {
-        RuleFor(x => x.Cpf).NotEmpty().Length(11, 14).Matches("^\\d{11}$").WithMessage("CPF deve conter 11 dígitos");
+        RuleFor(x => x.Cpf).NotEmpty().Length(11, 14).Matches("^\\d{11}$").WithMessage("CPF deve conter 11 dÃ­gitos");
         RuleFor(x => x.Rg).MaximumLength(20);
         RuleFor(x => x.Genero).MaximumLength(30);
     }
@@ -18,7 +18,7 @@ public class ClientePessoaJuridicaDtoValidator : AbstractValidator<ClientePessoa
 {
     public ClientePessoaJuridicaDtoValidator()
     {
-        RuleFor(x => x.Cnpj).NotEmpty().Length(14, 18).Matches("^\\d{14}$").WithMessage("CNPJ deve conter 14 dígitos");
+        RuleFor(x => x.Cnpj).NotEmpty().Length(14, 18).Matches("^\\d{14}$").WithMessage("CNPJ deve conter 14 dÃ­gitos");
         RuleFor(x => x.RazaoSocial).NotEmpty().MaximumLength(180);
         RuleFor(x => x.NomeFantasia).MaximumLength(180);
         RuleFor(x => x.InscricaoEstadual).MaximumLength(30);
@@ -97,14 +97,14 @@ public class ClienteCreateValidator : AbstractValidator<ClienteCreateDto>
         RuleFor(x => x.Observacoes).MaximumLength(500);
 
         RuleFor(x => x.PessoaFisica)
-            .NotNull().WithMessage("Dados de pessoa física são obrigatórios para clientes PF.")
+            .NotNull().WithMessage("Dados de pessoa fÃ­sica sÃ£o obrigatÃ³rios para clientes PF.")
             .When(x => x.Tipo == ClienteTipo.PessoaFisica);
         RuleFor(x => x.PessoaFisica!)
             .SetValidator(new ClientePessoaFisicaDtoValidator())
             .When(x => x.Tipo == ClienteTipo.PessoaFisica && x.PessoaFisica is not null);
 
         RuleFor(x => x.PessoaJuridica)
-            .NotNull().WithMessage("Dados de pessoa jurídica são obrigatórios para clientes PJ.")
+            .NotNull().WithMessage("Dados de pessoa jurÃ­dica sÃ£o obrigatÃ³rios para clientes PJ.")
             .When(x => x.Tipo == ClienteTipo.PessoaJuridica);
         RuleFor(x => x.PessoaJuridica!)
             .SetValidator(new ClientePessoaJuridicaDtoValidator())
@@ -112,13 +112,13 @@ public class ClienteCreateValidator : AbstractValidator<ClienteCreateDto>
 
         When(x => x.Enderecos is { Count: > 0 }, () =>
         {
-            RuleFor(x => x.Enderecos!).Must(TemApenasUmPrincipal).WithMessage("É permitido somente um endereço principal.");
+            RuleFor(x => x.Enderecos!).Must(TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um endereÃ§o principal.");
             RuleForEach(x => x.Enderecos!).SetValidator(new ClienteEnderecoDtoValidator());
         });
 
         When(x => x.Contatos is { Count: > 0 }, () =>
         {
-            RuleFor(x => x.Contatos!).Must(TemApenasUmPrincipal).WithMessage("É permitido somente um contato principal.");
+            RuleFor(x => x.Contatos!).Must(TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um contato principal.");
             RuleForEach(x => x.Contatos!).SetValidator(new ClienteContatoDtoValidator());
         });
 
@@ -129,7 +129,7 @@ public class ClienteCreateValidator : AbstractValidator<ClienteCreateDto>
 
         When(x => x.Veiculos is { Count: > 0 }, () =>
         {
-            RuleFor(x => x.Veiculos!).Must(TemApenasUmPrincipal).WithMessage("É permitido somente um veículo principal.");
+            RuleFor(x => x.Veiculos!).Must(TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um veÃ­culo principal.");
             RuleForEach(x => x.Veiculos!).SetValidator(new ClienteVeiculoDtoValidator());
         });
 
@@ -162,14 +162,14 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
         RuleFor(x => x.Observacoes).MaximumLength(500);
 
         RuleFor(x => x.PessoaFisica)
-            .NotNull().WithMessage("Dados de pessoa física são obrigatórios para clientes PF.")
+            .NotNull().WithMessage("Dados de pessoa fÃ­sica sÃ£o obrigatÃ³rios para clientes PF.")
             .When(x => x.Tipo == ClienteTipo.PessoaFisica);
         RuleFor(x => x.PessoaFisica!)
             .SetValidator(new ClientePessoaFisicaDtoValidator())
             .When(x => x.Tipo == ClienteTipo.PessoaFisica && x.PessoaFisica is not null);
 
         RuleFor(x => x.PessoaJuridica)
-            .NotNull().WithMessage("Dados de pessoa jurídica são obrigatórios para clientes PJ.")
+            .NotNull().WithMessage("Dados de pessoa jurÃ­dica sÃ£o obrigatÃ³rios para clientes PJ.")
             .When(x => x.Tipo == ClienteTipo.PessoaJuridica);
         RuleFor(x => x.PessoaJuridica!)
             .SetValidator(new ClientePessoaJuridicaDtoValidator())
@@ -177,13 +177,13 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
 
         When(x => x.Enderecos is { Count: > 0 }, () =>
         {
-            RuleFor(x => x.Enderecos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("É permitido somente um endereço principal.");
+            RuleFor(x => x.Enderecos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um endereÃ§o principal.");
             RuleForEach(x => x.Enderecos!).SetValidator(new ClienteEnderecoDtoValidator());
         });
 
         When(x => x.Contatos is { Count: > 0 }, () =>
         {
-            RuleFor(x => x.Contatos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("É permitido somente um contato principal.");
+            RuleFor(x => x.Contatos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um contato principal.");
             RuleForEach(x => x.Contatos!).SetValidator(new ClienteContatoDtoValidator());
         });
 
@@ -194,7 +194,7 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
 
         When(x => x.Veiculos is { Count: > 0 }, () =>
         {
-            RuleFor(x => x.Veiculos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("É permitido somente um veículo principal.");
+            RuleFor(x => x.Veiculos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um veÃ­culo principal.");
             RuleForEach(x => x.Veiculos!).SetValidator(new ClienteVeiculoDtoValidator());
         });
 
@@ -222,3 +222,4 @@ public class FornecedorCreateValidator : AbstractValidator<FornecedorCreateDto>
         RuleFor(x => x.Contato).NotEmpty();
     }
 }
+

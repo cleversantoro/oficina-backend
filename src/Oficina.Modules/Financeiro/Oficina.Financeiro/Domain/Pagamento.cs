@@ -1,4 +1,4 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.Financeiro.Domain;
 public class Pagamento : Entity
 {
@@ -8,3 +8,4 @@ public class Pagamento : Entity
     public string Status { get; set; } = "PENDENTE";
     public string? Transacao_Id { get; set; }
 }
+

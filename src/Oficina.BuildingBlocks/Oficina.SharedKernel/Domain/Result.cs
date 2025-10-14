@@ -1,4 +1,4 @@
-namespace Oficina.SharedKernel.Domain;
+﻿namespace Oficina.SharedKernel.Domain;
 
 public class Result<T>
 {
@@ -9,3 +9,4 @@ public class Result<T>
     public static Result<T> Ok(T value) => new() { Success = true, Value = value };
     public static Result<T> Fail(string error) => new() { Success = false, Error = error };
 }
+

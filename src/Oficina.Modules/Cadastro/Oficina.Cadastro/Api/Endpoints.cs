@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -63,7 +63,7 @@ public static class Endpoints
         {
             var cliente = await CarregarClientePorCodigo(db, id);
             return cliente is null ? Results.NotFound() : Results.Ok(MapToDetalhesDto(cliente));
-        }).WithSummary("Obtém cliente por código");
+        }).WithSummary("ObtÃ©m cliente por cÃ³digo");
 
         g.MapPost("/clientes", async (ClienteCreateDto dto, CadastroDbContext db, IValidator<ClienteCreateDto> validator) =>
         {
@@ -75,7 +75,7 @@ public static class Endpoints
 
             if (!await db.ClienteOrigens.AnyAsync(o => o.Id == dto.OrigemId))
             {
-                return Results.BadRequest("Origem informada não existe.");
+                return Results.BadRequest("Origem informada nÃ£o existe.");
             }
 
             var cliente = MapToEntity(dto);
@@ -99,7 +99,7 @@ public static class Endpoints
 
             if (!await db.ClienteOrigens.AnyAsync(o => o.Id == dto.OrigemId))
             {
-                return Results.BadRequest("Origem informada não existe.");
+                return Results.BadRequest("Origem informada nÃ£o existe.");
             }
 
             var cliente = await CarregarClientePorCodigo(db, id, track: true);
@@ -132,7 +132,7 @@ public static class Endpoints
         }).WithSummary("Exclui cliente");
 
         g.MapGet("/mecanicos", async (CadastroDbContext db) =>
-            Results.Ok(await db.Mecanicos.AsNoTracking().ToListAsync())).WithSummary("Lista mecânicos");
+            Results.Ok(await db.Mecanicos.AsNoTracking().ToListAsync())).WithSummary("Lista mecÃ¢nicos");
 
         g.MapPost("/mecanicos", async (MecanicoCreateDto dto, CadastroDbContext db, IValidator<MecanicoCreateDto> v) =>
         {
@@ -146,7 +146,7 @@ public static class Endpoints
             db.Mecanicos.Add(m);
             await db.SaveChangesAsync();
             return Results.Created($"/cadastro/mecanicos/{m.Id}", m);
-        }).WithSummary("Cria mecânico");
+        }).WithSummary("Cria mecÃ¢nico");
 
         g.MapGet("/fornecedores", async (CadastroDbContext db) =>
             Results.Ok(await db.Fornecedores.AsNoTracking().ToListAsync())).WithSummary("Lista fornecedores");
@@ -192,7 +192,7 @@ public static class Endpoints
         {
             cliente.PessoaFisica = new ClientePessoaFisica
             {
-                Cliente_Id = cliente.Id,
+                ClienteId = cliente.Id,
                 Cpf = dto.PessoaFisica.Cpf,
                 Rg = dto.PessoaFisica.Rg,
                 Data_Nascimento = dto.PessoaFisica.DataNascimento,
@@ -204,7 +204,7 @@ public static class Endpoints
         {
             cliente.PessoaJuridica = new ClientePessoaJuridica
             {
-                Cliente_Id = cliente.Id,
+                ClienteId = cliente.Id,
                 Cnpj = dto.PessoaJuridica.Cnpj,
                 Razao_Social = dto.PessoaJuridica.RazaoSocial,
                 Nome_Fantasia = dto.PessoaJuridica.NomeFantasia,
@@ -215,7 +215,7 @@ public static class Endpoints
 
         cliente.Enderecos = dto.Enderecos?.Select(e => new ClienteEndereco
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Tipo = e.Tipo,
             Cep = e.Cep,
             Logradouro = e.Logradouro,
@@ -230,7 +230,7 @@ public static class Endpoints
 
         cliente.Contatos = dto.Contatos?.Select(c => new ClienteContato
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Tipo = c.Tipo,
             Valor = c.Valor,
             Principal = c.Principal,
@@ -255,7 +255,7 @@ public static class Endpoints
         {
             cliente.Consentimento = new ClienteConsentimento
             {
-                Cliente_Id = cliente.Id,
+                ClienteId = cliente.Id,
                 Tipo = consentimento.Tipo,
                 Aceito = consentimento.Aceito,
                 Data = consentimento.Data,
@@ -267,7 +267,7 @@ public static class Endpoints
 
         cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Placa = v.Placa,
             Marca = v.Marca,
             Modelo_Id = v.ModeloId,
@@ -279,7 +279,7 @@ public static class Endpoints
 
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Nome = a.Nome,
             Tipo = a.Tipo,
             Url = a.Url,
@@ -310,7 +310,7 @@ public static class Endpoints
         {
             if (cliente.PessoaFisica is null)
             {
-                cliente.PessoaFisica = new ClientePessoaFisica { Cliente_Id = cliente.Id };
+                cliente.PessoaFisica = new ClientePessoaFisica { ClienteId = cliente.Id };
             }
 
             cliente.PessoaFisica.Cpf = dto.PessoaFisica!.Cpf;
@@ -328,7 +328,7 @@ public static class Endpoints
         {
             if (cliente.PessoaJuridica is null)
             {
-                cliente.PessoaJuridica = new ClientePessoaJuridica { Cliente_Id = cliente.Id };
+                cliente.PessoaJuridica = new ClientePessoaJuridica { ClienteId = cliente.Id };
             }
 
             cliente.PessoaJuridica.Cnpj = dto.PessoaJuridica!.Cnpj;
@@ -347,7 +347,7 @@ public static class Endpoints
         db.ClienteEnderecos.RemoveRange(cliente.Enderecos);
         cliente.Enderecos = dto.Enderecos?.Select(e => new ClienteEndereco
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Tipo = e.Tipo,
             Cep = e.Cep,
             Logradouro = e.Logradouro,
@@ -363,7 +363,7 @@ public static class Endpoints
         db.ClienteContatos.RemoveRange(cliente.Contatos);
         cliente.Contatos = dto.Contatos?.Select(c => new ClienteContato
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Tipo = c.Tipo,
             Valor = c.Valor,
             Principal = c.Principal,
@@ -388,7 +388,7 @@ public static class Endpoints
         {
             if (cliente.Consentimento is null)
             {
-                cliente.Consentimento = new ClienteConsentimento { Cliente_Id = cliente.Id };
+                cliente.Consentimento = new ClienteConsentimento { ClienteId = cliente.Id };
             }
 
             cliente.Consentimento.Tipo = dto.Consentimento.Tipo;
@@ -407,7 +407,7 @@ public static class Endpoints
         db.ClientesVeiculos.RemoveRange(cliente.Veiculos);
         cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Placa = v.Placa,
             Marca = v.Marca,
             Modelo_Id = v.ModeloId,
@@ -420,7 +420,7 @@ public static class Endpoints
         db.ClienteAnexos.RemoveRange(cliente.Anexos);
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
         {
-            Cliente_Id = cliente.Id,
+            ClienteId = cliente.Id,
             Nome = a.Nome,
             Tipo = a.Tipo,
             Url = a.Url,
@@ -550,3 +550,4 @@ public static class Endpoints
             anexos);
     }
 }
+

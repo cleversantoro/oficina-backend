@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 using Oficina.Cadastro.Infrastructure;
@@ -51,3 +51,4 @@ app.MapEstoqueEndpoints();
 app.MapFinanceiroEndpoints();
 
 app.Run();
+

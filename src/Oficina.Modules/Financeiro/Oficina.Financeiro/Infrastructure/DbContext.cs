@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oficina.Financeiro.Domain;
 namespace Oficina.Financeiro.Infrastructure;
 public class FinanceiroDbContext : DbContext
@@ -21,3 +21,4 @@ public class FinanceiroDbContext : DbContext
         });
     }
 }
+

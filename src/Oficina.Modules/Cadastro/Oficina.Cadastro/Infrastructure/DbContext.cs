@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oficina.Cadastro.Domain;
 
 namespace Oficina.Cadastro.Infrastructure;
@@ -41,34 +41,34 @@ public class CadastroDbContext : DbContext
                 .OnDelete(DeleteBehavior.SetNull);
             entity.HasMany(p => p.Enderecos)
                 .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
+                .HasForeignKey(e => e.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(p => p.Contatos)
                 .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
+                .HasForeignKey(e => e.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(p => p.Indicacoes)
                 .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
+                .HasForeignKey(e => e.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasMany(p => p.Veiculos)
                 .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
+                .HasForeignKey(e => e.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
             entity.HasOne(p => p.PessoaFisica)
                 .WithOne()
-                .HasForeignKey<ClientePessoaFisica>(pf => pf.Cliente_Id)
+                .HasForeignKey<ClientePessoaFisica>(pf => pf.ClienteId)
                 .HasPrincipalKey<Cliente>(c => c.Id)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
             entity.HasOne(p => p.PessoaJuridica)
                 .WithOne()
-                .HasForeignKey<ClientePessoaJuridica>(pj => pj.Cliente_Id)
+                .HasForeignKey<ClientePessoaJuridica>(pj => pj.ClienteId)
                 .HasPrincipalKey<Cliente>(c => c.Id)
                 .OnDelete(DeleteBehavior.Cascade)
                 .IsRequired(false);
             //entity.HasMany(p => p.Anexos).WithOne(e => e.Cliente)
-            //    .HasForeignKey(e => e.Cliente_Id)
+            //    .HasForeignKey(e => e.ClienteId)
             //    .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -93,7 +93,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Cep).HasMaxLength(12).IsRequired();
             entity.Property(p => p.Pais).HasMaxLength(80);
             entity.Property(p => p.Principal).HasDefaultValue(false);
-            entity.HasIndex(p => new { p.Cliente_Id, p.Tipo, p.Principal });
+            entity.HasIndex(p => new { p.ClienteId, p.Tipo, p.Principal });
         });
 
         modelBuilder.Entity<ClienteContato>(entity =>
@@ -103,7 +103,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Valor).HasMaxLength(160).IsRequired();
             entity.Property(p => p.Observacao).HasMaxLength(240);
             entity.Property(p => p.Principal).HasDefaultValue(false);
-            entity.HasIndex(p => new { p.Cliente_Id, p.Tipo, p.Valor }).IsUnique();
+            entity.HasIndex(p => new { p.ClienteId, p.Tipo, p.Valor }).IsUnique();
         });
 
         modelBuilder.Entity<ClienteIndicacao>(entity =>
@@ -112,7 +112,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Indicador_Nome).HasMaxLength(160).IsRequired();
             entity.Property(p => p.Indicador_Telefone).HasMaxLength(20);
             entity.Property(p => p.Observacao).HasMaxLength(240);
-            entity.HasIndex(p => p.Cliente_Id);
+            entity.HasIndex(p => p.ClienteId);
         });
 
         modelBuilder.Entity<ClientePessoaFisica>(entity =>
@@ -123,8 +123,8 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Genero).HasMaxLength(30);
             entity.Property(p => p.Estado_Civil).HasMaxLength(20);
             entity.Property(p => p.Profissao).HasMaxLength(120);
-            entity.HasIndex(p => p.Cliente_Id).IsUnique();
-            entity.Property(p => p.Cliente_Id).IsRequired();
+            entity.HasIndex(p => p.ClienteId).IsUnique();
+            entity.Property(p => p.ClienteId).IsRequired();
         });
 
         modelBuilder.Entity<ClientePessoaJuridica>(entity =>
@@ -136,8 +136,8 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Inscricao_Estadual).HasMaxLength(30);
             entity.Property(p => p.Inscricao_Municipal).HasMaxLength(30);
             entity.Property(p => p.Responsavel).HasMaxLength(120);
-            entity.HasIndex(p => p.Cliente_Id).IsUnique();
-            entity.Property(p => p.Cliente_Id).IsRequired();
+            entity.HasIndex(p => p.ClienteId).IsUnique();
+            entity.Property(p => p.ClienteId).IsRequired();
         });
 
         modelBuilder.Entity<ClienteConsentimento>(entity =>
@@ -145,10 +145,10 @@ public class CadastroDbContext : DbContext
             entity.ToTable("cad_clientes_lgpd_consentimentos");
             entity.Property(p => p.Canal).HasMaxLength(80).IsRequired();
             entity.Property(p => p.Observacoes).HasMaxLength(240);
-            entity.HasIndex(p => p.Cliente_Id).IsUnique();
+            entity.HasIndex(p => p.ClienteId).IsUnique();
             entity.HasOne(p => p.Cliente)
                 .WithOne(c => c.Consentimento)
-                .HasForeignKey<ClienteConsentimento>(p => p.Cliente_Id)
+                .HasForeignKey<ClienteConsentimento>(p => p.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -157,10 +157,10 @@ public class CadastroDbContext : DbContext
             entity.ToTable("cad_clientes_financeiro");
             entity.Property(p => p.Limite_Credito).HasColumnType("decimal(10,2)");
             entity.Property(p => p.Observacoes).HasMaxLength(500);
-            entity.HasIndex(p => p.Cliente_Id).IsUnique();
+            entity.HasIndex(p => p.ClienteId).IsUnique();
             entity.HasOne(p => p.Cliente)
                 .WithOne(c => c.Financeiro)
-                .HasForeignKey<ClienteFinanceiro>(p => p.Cliente_Id)
+                .HasForeignKey<ClienteFinanceiro>(p => p.ClienteId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
@@ -208,7 +208,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Tipo).HasMaxLength(100).IsRequired();
             entity.Property(p => p.Url).HasMaxLength(500).IsRequired();
             entity.Property(p => p.Observacao).HasMaxLength(240);
-            entity.HasIndex(p => new { p.Cliente_Id, p.Nome }).IsUnique();
+            entity.HasIndex(p => new { p.ClienteId, p.Nome }).IsUnique();
         });
 
         modelBuilder.Entity<Mecanico>(entity =>
@@ -227,3 +227,4 @@ public class CadastroDbContext : DbContext
         });
     }
 }
+

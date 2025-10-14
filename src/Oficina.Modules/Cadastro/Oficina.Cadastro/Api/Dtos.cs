@@ -1,4 +1,4 @@
-using Oficina.Cadastro.Domain;
+﻿using Oficina.Cadastro.Domain;
 
 namespace Oficina.Cadastro.Api;
 
@@ -75,3 +75,4 @@ public record ClienteFiltroDto(ClienteStatus? Status = null, ClienteTipo? Tipo =
 public record MecanicoCreateDto(string Nome, string? Especialidade);
 
 public record FornecedorCreateDto(string RazaoSocial, string Cnpj, string Contato, long? Fornecedor_Id);
+

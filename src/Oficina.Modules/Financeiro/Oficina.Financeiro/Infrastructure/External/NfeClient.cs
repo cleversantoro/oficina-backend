@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace Oficina.Financeiro.Infrastructure.External;
 public interface INfeClient
@@ -14,3 +14,4 @@ public class FakeNfeClient : INfeClient
         return Task.FromResult((true, numero, chave));
     }
 }
+

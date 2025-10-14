@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oficina.Financeiro.Infrastructure;
 using Oficina.Financeiro.Domain;
 using Oficina.Financeiro.Api;
@@ -38,3 +38,4 @@ public static class Endpoints
         }).WithSummary("Emite NF-e (mock)");
     }
 }
+

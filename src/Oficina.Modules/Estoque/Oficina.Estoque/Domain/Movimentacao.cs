@@ -1,4 +1,4 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.Estoque.Domain;
 public class Movimentacao : Entity
 {
@@ -7,3 +7,4 @@ public class Movimentacao : Entity
     public string Tipo { get; set; } = default!;
     public string? Referencia { get; set; }
 }
+

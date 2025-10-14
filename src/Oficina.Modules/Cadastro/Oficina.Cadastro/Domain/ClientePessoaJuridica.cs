@@ -1,10 +1,10 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 
 namespace Oficina.Cadastro.Domain;
 
 public class ClientePessoaJuridica : Entity
 {
-    public long Cliente_Id { get; set; }
+    public long ClienteId { get; set; }
     public string Cnpj { get; set; } = default!;
     public string Razao_Social { get; set; } = default!;
     public string? Nome_Fantasia { get; set; }
@@ -13,3 +13,4 @@ public class ClientePessoaJuridica : Entity
     public string? Responsavel { get; set; }
 
 }
+

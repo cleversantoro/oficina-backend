@@ -1,4 +1,4 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.Cadastro.Domain;
 public class Mecanico : Entity
 {
@@ -6,3 +6,4 @@ public class Mecanico : Entity
     public string Especialidade { get; set; } = "Geral";
     public bool Ativo { get; set; } = true;
 }
+

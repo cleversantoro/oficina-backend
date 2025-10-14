@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oficina.OrdemServico.Domain;
 namespace Oficina.OrdemServico.Infrastructure;
 public class OrdemServicoDbContext : DbContext
@@ -20,3 +20,4 @@ public class OrdemServicoDbContext : DbContext
         });
     }
 }
+

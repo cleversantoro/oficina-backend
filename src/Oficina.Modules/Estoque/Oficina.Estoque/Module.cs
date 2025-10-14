@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Oficina.Estoque;
 
@@ -10,3 +10,4 @@ public static class EstoqueModule
         return services;
     }
 }
+

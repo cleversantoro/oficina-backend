@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Oficina.SharedKernel.Domain;
 
@@ -13,3 +13,4 @@ public class VeiculoModelo : Entity
     public int? Ano_Fim { get; set; }
     public ICollection<ClienteVeiculo> Veiculos { get; set; } = new List<ClienteVeiculo>();
 }
+

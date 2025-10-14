@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Oficina.Estoque.Domain;
 namespace Oficina.Estoque.Infrastructure;
 public class EstoqueDbContext : DbContext
@@ -21,3 +21,4 @@ public class EstoqueDbContext : DbContext
         });
     }
 }
+

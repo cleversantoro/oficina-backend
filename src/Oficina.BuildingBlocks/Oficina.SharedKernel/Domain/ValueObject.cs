@@ -1,3 +1,4 @@
-namespace Oficina.SharedKernel.Domain;
+﻿namespace Oficina.SharedKernel.Domain;
 
 public abstract record ValueObject;
+

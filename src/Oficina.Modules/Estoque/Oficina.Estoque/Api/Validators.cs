@@ -1,4 +1,4 @@
-using FluentValidation;
+﻿using FluentValidation;
 namespace Oficina.Estoque.Api;
 public class PecaCreateValidator : AbstractValidator<PecaCreateDto>
 {
@@ -19,3 +19,4 @@ public class MovimentacaoCreateValidator : AbstractValidator<MovimentacaoCreateD
         RuleFor(x=>x.Tipo).Must(t=>new[]{"ENTRADA","SAIDA"}.Contains(t.ToUpper())).WithMessage("Tipo deve ser ENTRADA ou SAIDA");
     }
 }
+

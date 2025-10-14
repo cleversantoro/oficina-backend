@@ -1,4 +1,4 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.Estoque.Domain;
 public class Peca : Entity
 {
@@ -8,3 +8,4 @@ public class Peca : Entity
     public int Quantidade { get; set; }
     public long? Fornecedor_Id { get; set; }
 }
+

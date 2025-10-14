@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Oficina.SharedKernel.Domain;
 
@@ -41,3 +41,4 @@ public class Cliente : Entity
         }
     }
 }
+

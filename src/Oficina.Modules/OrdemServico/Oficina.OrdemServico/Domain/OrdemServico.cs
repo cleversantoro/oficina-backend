@@ -1,8 +1,8 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.OrdemServico.Domain;
 public class OrdemServico : Entity
 {
-    public long Cliente_Id { get; set; }
+    public long ClienteId { get; set; }
     public long Mecanico_Id { get; set; }
     public string Descricao_Problema { get; set; } = default!;
     public string Status { get; set; } = "ABERTA";
@@ -10,3 +10,4 @@ public class OrdemServico : Entity
     public DateTime? Data_Conclusao { get; set; }
     public List<ItemServico> Itens { get; set; } = new();
 }
+

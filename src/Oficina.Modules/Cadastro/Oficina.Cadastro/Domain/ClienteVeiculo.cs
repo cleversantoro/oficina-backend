@@ -1,10 +1,10 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 
 namespace Oficina.Cadastro.Domain;
 
 public class ClienteVeiculo : Entity
 {
-    public long Cliente_Id { get; set; }
+    public long ClienteId { get; set; }
     public Cliente Cliente { get; set; } = default!;
     public string Placa { get; set; } = default!;
     public string? Marca { get; set; }
@@ -18,3 +18,4 @@ public class ClienteVeiculo : Entity
     public string? Combustivel { get; set; }
     public string? Observacao { get; set; }
 }
+

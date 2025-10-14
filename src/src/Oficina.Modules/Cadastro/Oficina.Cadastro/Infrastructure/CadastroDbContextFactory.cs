@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
@@ -20,4 +20,6 @@ public class CadastroDbContextFactory : IDesignTimeDbContextFactory<CadastroDbCo
         return new CadastroDbContext(optionsBuilder.Options);
     }
 }
+
+
 

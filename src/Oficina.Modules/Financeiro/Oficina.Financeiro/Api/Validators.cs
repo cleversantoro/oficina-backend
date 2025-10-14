@@ -1,4 +1,4 @@
-using System.Linq;
+﻿using System.Linq;
 using FluentValidation;
 namespace Oficina.Financeiro.Api;
 public class PagamentoCreateValidator : AbstractValidator<PagamentoCreateDto>
@@ -18,3 +18,4 @@ public class NfeCreateValidator : AbstractValidator<NfeCreateDto>
 {
     public NfeCreateValidator(){ RuleFor(x=>x.OrdemServicoId).GreaterThan(0); }
 }
+

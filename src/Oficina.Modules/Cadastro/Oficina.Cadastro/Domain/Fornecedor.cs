@@ -1,4 +1,4 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.Cadastro.Domain;
 public class Fornecedor : Entity
 {
@@ -6,3 +6,4 @@ public class Fornecedor : Entity
     public string Cnpj { get; set; } = default!;
     public string Contato { get; set; } = default!;
 }
+

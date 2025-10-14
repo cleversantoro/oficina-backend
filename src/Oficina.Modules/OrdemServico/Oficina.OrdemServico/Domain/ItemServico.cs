@@ -1,4 +1,4 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 namespace Oficina.OrdemServico.Domain;
 public class ItemServico : Entity
 {
@@ -9,3 +9,4 @@ public class ItemServico : Entity
     public decimal Valor_Unitario { get; set; }
     public decimal Total => Math.Round(Quantidade * Valor_Unitario, 2);
 }
+

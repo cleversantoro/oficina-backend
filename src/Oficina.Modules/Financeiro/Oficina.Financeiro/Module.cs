@@ -1,4 +1,4 @@
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 
 namespace Oficina.Financeiro;
 
@@ -10,3 +10,4 @@ public static class FinanceiroModule
         return services;
     }
 }
+

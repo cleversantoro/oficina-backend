@@ -1,4 +1,4 @@
-namespace Oficina.Cadastro.Domain;
+﻿namespace Oficina.Cadastro.Domain;
 
 public enum ClienteTipo
 {
@@ -45,3 +45,4 @@ public enum ClienteConsentimentoTipo
     Comunicacoes = 3,
     Outros = 99
 }
+

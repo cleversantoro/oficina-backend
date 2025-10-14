@@ -1,10 +1,10 @@
-using Oficina.SharedKernel.Domain;
+﻿using Oficina.SharedKernel.Domain;
 
 namespace Oficina.Cadastro.Domain;
 
 public class ClienteConsentimento : Entity
 {
-    public long Cliente_Id { get; set; }
+    public long ClienteId { get; set; }
     public Cliente Cliente { get; set; } = default!;
     public ClienteConsentimentoTipo Tipo { get; set; }
     public bool Aceito { get; set; }
@@ -13,3 +13,4 @@ public class ClienteConsentimento : Entity
     public string? Observacoes { get; set; }
     public string Canal { get; set; } = default!;
 }
+

@@ -1,4 +1,4 @@
-namespace Oficina.Financeiro.Infrastructure.External;
+﻿namespace Oficina.Financeiro.Infrastructure.External;
 public interface IPaymentGatewayClient
 {
     Task<(bool success, string transactionId)> ChargeAsync(string meio, decimal valor);
@@ -12,3 +12,4 @@ public class FakePaymentGatewayClient : IPaymentGatewayClient
         return Task.FromResult((ok, id));
     }
 }
+
