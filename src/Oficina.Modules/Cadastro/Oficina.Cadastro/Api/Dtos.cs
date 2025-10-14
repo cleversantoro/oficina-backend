@@ -1,4 +1,6 @@
-﻿using Oficina.Cadastro.Domain;
+﻿using System;
+using System.Collections.Generic;
+using Oficina.Cadastro.Domain;
 
 namespace Oficina.Cadastro.Api;
 
@@ -72,7 +74,84 @@ public record ClienteDetalhesDto(
 
 public record ClienteFiltroDto(ClienteStatus? Status = null, ClienteTipo? Tipo = null, long? OrigemId = null, bool? Vip = null, string? Nome = null);
 
-public record MecanicoCreateDto(string Nome, string? Especialidade);
+public record MecanicoEspecialidadeRelDto(long EspecialidadeId, string Nivel, bool Principal, string? Anotacoes);
+public record MecanicoContatoDto(string Tipo, string Valor, bool Principal, string? Observacao);
+public record MecanicoEnderecoDto(string Tipo, string Cep, string Logradouro, string Numero, string Bairro, string Cidade, string Estado, string? Pais, string? Complemento, bool Principal);
+public record MecanicoDocumentoDto(string Tipo, string Numero, DateTime? DataEmissao, DateTime? DataValidade, string? OrgaoExpedidor, string? ArquivoUrl);
+public record MecanicoCertificacaoDto(long? EspecialidadeId, string Titulo, string? Instituicao, DateTime? DataConclusao, DateTime? DataValidade, string? CodigoCertificacao);
+public record MecanicoDisponibilidadeDto(byte DiaSemana, TimeSpan HoraInicio, TimeSpan HoraFim, int CapacidadeAtendimentos);
+public record MecanicoExperienciaDto(string Empresa, string Cargo, DateTime? DataInicio, DateTime? DataFim, string? ResumoAtividades);
+
+public record MecanicoCreateDto(
+    string Codigo,
+    string Nome,
+    string? Sobrenome,
+    string? NomeSocial,
+    string DocumentoPrincipal,
+    int TipoDocumento,
+    DateTime DataAdmissao,
+    DateTime? DataNascimento,
+    DateTime? DataDemissao,
+    string Status,
+    long? EspecialidadePrincipalId,
+    string Nivel,
+    decimal ValorHora,
+    int CargaHorariaSemanal,
+    string? Observacoes,
+    IReadOnlyCollection<MecanicoEspecialidadeRelDto>? Especialidades,
+    IReadOnlyCollection<MecanicoContatoDto>? Contatos,
+    IReadOnlyCollection<MecanicoEnderecoDto>? Enderecos,
+    IReadOnlyCollection<MecanicoDocumentoDto>? Documentos,
+    IReadOnlyCollection<MecanicoCertificacaoDto>? Certificacoes,
+    IReadOnlyCollection<MecanicoDisponibilidadeDto>? Disponibilidades,
+    IReadOnlyCollection<MecanicoExperienciaDto>? Experiencias
+);
+
+public record MecanicoResumoDto(
+    long Id,
+    string Codigo,
+    string NomeCompleto,
+    string Status,
+    string Nivel,
+    string? EspecialidadePrincipal,
+    decimal ValorHora
+);
+
+public record MecanicoEspecialidadeResumoDto(long EspecialidadeId, string? EspecialidadeCodigo, string? EspecialidadeNome, string Nivel, bool Principal, string? Anotacoes);
+public record MecanicoContatoResumoDto(long Id, string Tipo, string Valor, bool Principal, string? Observacao);
+public record MecanicoEnderecoResumoDto(long Id, string Tipo, string Cep, string Logradouro, string Numero, string Bairro, string Cidade, string Estado, string? Pais, string? Complemento, bool Principal);
+public record MecanicoDocumentoResumoDto(long Id, string Tipo, string Numero, DateTime? DataEmissao, DateTime? DataValidade, string? OrgaoExpedidor, string? ArquivoUrl);
+public record MecanicoCertificacaoResumoDto(long Id, long? EspecialidadeId, string Titulo, string? Instituicao, DateTime? DataConclusao, DateTime? DataValidade, string? CodigoCertificacao, string? EspecialidadeNome);
+public record MecanicoDisponibilidadeResumoDto(long Id, byte DiaSemana, TimeSpan HoraInicio, TimeSpan HoraFim, int CapacidadeAtendimentos);
+public record MecanicoExperienciaResumoDto(long Id, string Empresa, string Cargo, DateTime? DataInicio, DateTime? DataFim, string? ResumoAtividades);
+
+public record MecanicoDetalhesDto(
+    long Id,
+    string Codigo,
+    string Nome,
+    string? Sobrenome,
+    string? NomeSocial,
+    string DocumentoPrincipal,
+    int TipoDocumento,
+    DateTime DataAdmissao,
+    DateTime? DataNascimento,
+    DateTime? DataDemissao,
+    string Status,
+    long? EspecialidadePrincipalId,
+    string? EspecialidadePrincipalNome,
+    string Nivel,
+    decimal ValorHora,
+    int CargaHorariaSemanal,
+    string? Observacoes,
+    IReadOnlyCollection<MecanicoEspecialidadeResumoDto> Especialidades,
+    IReadOnlyCollection<MecanicoContatoResumoDto> Contatos,
+    IReadOnlyCollection<MecanicoEnderecoResumoDto> Enderecos,
+    IReadOnlyCollection<MecanicoDocumentoResumoDto> Documentos,
+    IReadOnlyCollection<MecanicoCertificacaoResumoDto> Certificacoes,
+    IReadOnlyCollection<MecanicoDisponibilidadeResumoDto> Disponibilidades,
+    IReadOnlyCollection<MecanicoExperienciaResumoDto> Experiencias
+);
 
 public record FornecedorCreateDto(string RazaoSocial, string Cnpj, string Contato, long? Fornecedor_Id);
+
 

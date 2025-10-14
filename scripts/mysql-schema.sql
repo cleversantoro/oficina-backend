@@ -186,15 +186,184 @@ CREATE TABLE IF NOT EXISTS cad_clientes_anexos (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ============================================================================
+-- Colaboradores - Mecanicos
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_especialidades (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Codigo VARCHAR(16) NOT NULL,
+    Nome VARCHAR(160) NOT NULL,
+    Descricao VARCHAR(240),
+    Ativo TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_especialidades_codigo (Codigo),
+    UNIQUE KEY UX_cad_mecanicos_especialidades_nome (Nome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS cad_mecanicos (
     Id BIGINT NOT NULL AUTO_INCREMENT,
     Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Codigo VARCHAR(20) NOT NULL,
     Nome VARCHAR(120) NOT NULL,
-    Especialidade VARCHAR(120) NOT NULL DEFAULT 'Geral',
-    Ativo TINYINT(1) NOT NULL DEFAULT 1,
-    PRIMARY KEY (Id)
+    Sobrenome VARCHAR(120),
+    Nome_Social VARCHAR(120),
+    Documento_Principal VARCHAR(20) NOT NULL,
+    Tipo_Documento INT NOT NULL DEFAULT 1,
+    Data_Nascimento DATE,
+    Data_Admissao DATE NOT NULL,
+    Data_Demissao DATE,
+    Status VARCHAR(20) NOT NULL DEFAULT 'Ativo',
+    Especialidade_Principal_Id BIGINT NULL,
+    Nivel VARCHAR(20) NOT NULL DEFAULT 'Pleno',
+    Valor_Hora DECIMAL(10,2) NOT NULL DEFAULT 0,
+    Carga_Horaria_Semanal INT NOT NULL DEFAULT 44,
+    Observacoes VARCHAR(500),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_codigo (Codigo),
+    UNIQUE KEY UX_cad_mecanicos_documento (Documento_Principal),
+    KEY IX_cad_mecanicos_especialidade (Especialidade_Principal_Id),
+    CONSTRAINT FK_cad_mecanicos_especialidade FOREIGN KEY (Especialidade_Principal_Id)
+        REFERENCES cad_mecanicos_especialidades (Id)
+        ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_especialidades_rel (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Especialidade_Id BIGINT NOT NULL,
+    Nivel VARCHAR(20) NOT NULL DEFAULT 'Pleno',
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    Anotacoes VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_especialidades_rel (Mecanico_Id, Especialidade_Id),
+    KEY IX_cad_mecanicos_especialidades_rel_esp (Especialidade_Id),
+    CONSTRAINT FK_cad_mecanicos_especialidades_rel_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_cad_mecanicos_especialidades_rel_especialidade FOREIGN KEY (Especialidade_Id)
+        REFERENCES cad_mecanicos_especialidades (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_documentos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Tipo VARCHAR(30) NOT NULL,
+    Numero VARCHAR(40) NOT NULL,
+    Data_Emissao DATE,
+    Data_Validade DATE,
+    Orgao_Expedidor VARCHAR(80),
+    Arquivo_Url VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_documentos_mecanico_numero (Mecanico_Id, Tipo, Numero),
+    CONSTRAINT FK_cad_mecanicos_documentos_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_contatos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Tipo VARCHAR(20) NOT NULL,
+    Valor VARCHAR(160) NOT NULL,
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    Observacao VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_contatos_mecanico_tipo_valor (Mecanico_Id, Tipo, Valor),
+    CONSTRAINT FK_cad_mecanicos_contatos_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_enderecos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Tipo VARCHAR(20) NOT NULL,
+    Cep VARCHAR(12) NOT NULL,
+    Logradouro VARCHAR(160) NOT NULL,
+    Numero VARCHAR(20) NOT NULL,
+    Bairro VARCHAR(120) NOT NULL,
+    Cidade VARCHAR(120) NOT NULL,
+    Estado VARCHAR(60) NOT NULL,
+    Pais VARCHAR(80),
+    Complemento VARCHAR(120),
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_enderecos_mecanico_tipo_principal (Mecanico_Id, Tipo, Principal),
+    CONSTRAINT FK_cad_mecanicos_enderecos_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_certificacoes (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Especialidade_Id BIGINT NULL,
+    Titulo VARCHAR(160) NOT NULL,
+    Instituicao VARCHAR(160),
+    Data_Conclusao DATE,
+    Data_Validade DATE,
+    Codigo_Certificacao VARCHAR(60),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_certificacoes_mecanico_titulo (Mecanico_Id, Titulo),
+    KEY IX_cad_mecanicos_certificacoes_especialidade (Especialidade_Id),
+    CONSTRAINT FK_cad_mecanicos_certificacoes_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_cad_mecanicos_certificacoes_especialidade FOREIGN KEY (Especialidade_Id)
+        REFERENCES cad_mecanicos_especialidades (Id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_disponibilidades (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Dia_Semana TINYINT NOT NULL,
+    Hora_Inicio TIME NOT NULL,
+    Hora_Fim TIME NOT NULL,
+    Capacidade_Atendimentos INT NOT NULL DEFAULT 5,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_disponibilidades (Mecanico_Id, Dia_Semana, Hora_Inicio, Hora_Fim),
+    CONSTRAINT FK_cad_mecanicos_disponibilidades_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_mecanicos_experiencias (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Mecanico_Id BIGINT NOT NULL,
+    Empresa VARCHAR(160) NOT NULL,
+    Cargo VARCHAR(120) NOT NULL,
+    Data_Inicio DATE,
+    Data_Fim DATE,
+    Resumo_Atividades VARCHAR(400),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_mecanicos_experiencias (Mecanico_Id, Empresa, Cargo),
+    KEY IX_cad_mecanicos_experiencias_mecanico (Mecanico_Id),
+    CONSTRAINT FK_cad_mecanicos_experiencias_mecanico FOREIGN KEY (Mecanico_Id)
+        REFERENCES cad_mecanicos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
 
 CREATE TABLE IF NOT EXISTS cad_fornecedores (
     Id BIGINT NOT NULL AUTO_INCREMENT,

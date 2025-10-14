@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
@@ -132,7 +133,22 @@ public static class Endpoints
         }).WithSummary("Exclui cliente");
 
         g.MapGet("/mecanicos", async (CadastroDbContext db) =>
-            Results.Ok(await db.Mecanicos.AsNoTracking().ToListAsync())).WithSummary("Lista mecÃ¢nicos");
+        {
+            var mecanicos = await db.Mecanicos
+                .AsNoTracking()
+                .Include(m => m.EspecialidadePrincipal)
+                .Include(m => m.Especialidades)
+                .ThenInclude(e => e.Especialidade)
+                .ToListAsync();
+
+            var result = mecanicos
+                .OrderBy(m => m.Nome)
+                .ThenBy(m => m.Sobrenome)
+                .Select(MapToMecanicoResumoDto)
+                .ToList();
+
+            return Results.Ok(result);
+        }).WithSummary("Lista mecanicos");
 
         g.MapPost("/mecanicos", async (MecanicoCreateDto dto, CadastroDbContext db, IValidator<MecanicoCreateDto> v) =>
         {
@@ -142,11 +158,73 @@ public static class Endpoints
                 return Results.ValidationProblem(vr.ToDictionary());
             }
 
-            var m = new Mecanico { Nome = dto.Nome, Especialidade = dto.Especialidade ?? "Geral" };
-            db.Mecanicos.Add(m);
+            if (await db.Mecanicos.AnyAsync(m => m.Codigo == dto.Codigo))
+            {
+                return Results.BadRequest("Código informado já está em uso.");
+            }
+
+            if (await db.Mecanicos.AnyAsync(m => m.Documento_Principal == dto.DocumentoPrincipal))
+            {
+                return Results.BadRequest("Documento informado ja esta em uso.");
+            }
+
+            if (dto.EspecialidadePrincipalId.HasValue &&
+                !await db.MecanicoEspecialidades.AnyAsync(e => e.Id == dto.EspecialidadePrincipalId.Value))
+            {
+                return Results.BadRequest("Especialidade principal informada nao existe.");
+            }
+
+            if (dto.Especialidades is { Count: > 0 })
+            {
+                var especialidadeIds = dto.Especialidades.Select(e => e.EspecialidadeId).Distinct().ToList();
+                if (especialidadeIds.Count > 0)
+                {
+                    var existentes = await db.MecanicoEspecialidades
+                        .Where(e => especialidadeIds.Contains(e.Id))
+                        .Select(e => e.Id)
+                        .ToListAsync();
+                    var faltantes = especialidadeIds.Except(existentes).ToArray();
+                    if (faltantes.Length > 0)
+                    {
+                        return Results.BadRequest($"Especialidades nao encontradas: {string.Join(", ", faltantes)}");
+                    }
+                }
+            }
+
+            if (dto.Certificacoes is { Count: > 0 })
+            {
+                var especialidadesCert = dto.Certificacoes
+                    .Where(c => c.EspecialidadeId.HasValue)
+                    .Select(c => c.EspecialidadeId!.Value)
+                    .Distinct()
+                    .ToList();
+
+                if (especialidadesCert.Count > 0)
+                {
+                    var existentes = await db.MecanicoEspecialidades
+                        .Where(e => especialidadesCert.Contains(e.Id))
+                        .Select(e => e.Id)
+                        .ToListAsync();
+                    var faltantes = especialidadesCert.Except(existentes).ToArray();
+                    if (faltantes.Length > 0)
+                    {
+                        return Results.BadRequest($"Especialidades informadas nas certificacoes nao foram encontradas: {string.Join(", ", faltantes)}");
+                    }
+                }
+            }
+
+            var mecanico = MapToMecanicoEntity(dto);
+            db.Mecanicos.Add(mecanico);
             await db.SaveChangesAsync();
-            return Results.Created($"/cadastro/mecanicos/{m.Id}", m);
-        }).WithSummary("Cria mecÃ¢nico");
+
+            var created = await CarregarMecanicoCompleto(db, mecanico.Id);
+            if (created is null)
+            {
+                return Results.Created($"/cadastro/mecanicos/{mecanico.Id}", null);
+            }
+
+            return Results.Created($"/cadastro/mecanicos/{mecanico.Id}", MapToMecanicoDetalhesDto(created));
+        }).WithSummary("Cria mecanico");
 
         g.MapGet("/fornecedores", async (CadastroDbContext db) =>
             Results.Ok(await db.Fornecedores.AsNoTracking().ToListAsync())).WithSummary("Lista fornecedores");
@@ -166,6 +244,271 @@ public static class Endpoints
         }).WithSummary("Cria fornecedor");
     }
 
+    private static MecanicoResumoDto MapToMecanicoResumoDto(Mecanico mecanico)
+    {
+        return new MecanicoResumoDto(
+            mecanico.Id,
+            mecanico.Codigo,
+            ComposeNomeCompleto(mecanico),
+            mecanico.Status,
+            mecanico.Nivel,
+            mecanico.EspecialidadePrincipal?.Nome,
+            mecanico.Valor_Hora);
+    }
+
+    private static string ComposeNomeCompleto(Mecanico mecanico) =>
+        string.IsNullOrWhiteSpace(mecanico.Sobrenome)
+            ? mecanico.Nome
+            : $"{mecanico.Nome} {mecanico.Sobrenome}".Trim();
+
+    private static async Task<Mecanico?> CarregarMecanicoCompleto(CadastroDbContext db, long mecanicoId)
+    {
+        return await db.Mecanicos
+            .Include(m => m.EspecialidadePrincipal)
+            .Include(m => m.Especialidades).ThenInclude(e => e.Especialidade)
+            .Include(m => m.Contatos)
+            .Include(m => m.Enderecos)
+            .Include(m => m.Documentos)
+            .Include(m => m.Certificacoes).ThenInclude(c => c.Especialidade)
+            .Include(m => m.Disponibilidades)
+            .Include(m => m.Experiencias)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(m => m.Id == mecanicoId);
+    }
+
+    private static Mecanico MapToMecanicoEntity(MecanicoCreateDto dto)
+    {
+        var mecanico = new Mecanico
+        {
+            Codigo = dto.Codigo.Trim(),
+            Nome = dto.Nome.Trim(),
+            Sobrenome = Normalize(dto.Sobrenome),
+            Nome_Social = Normalize(dto.NomeSocial),
+            Documento_Principal = dto.DocumentoPrincipal.Trim(),
+            Tipo_Documento = dto.TipoDocumento,
+            Data_Admissao = dto.DataAdmissao,
+            Data_Nascimento = dto.DataNascimento,
+            Data_Demissao = dto.DataDemissao,
+            Status = string.IsNullOrWhiteSpace(dto.Status) ? "Ativo" : dto.Status.Trim(),
+            Especialidade_Principal_Id = dto.EspecialidadePrincipalId,
+            Nivel = string.IsNullOrWhiteSpace(dto.Nivel) ? "Pleno" : dto.Nivel.Trim(),
+            Valor_Hora = dto.ValorHora,
+            Carga_Horaria_Semanal = dto.CargaHorariaSemanal,
+            Observacoes = Normalize(dto.Observacoes)
+        };
+
+        if (dto.Especialidades is { Count: > 0 })
+        {
+            mecanico.Especialidades = dto.Especialidades
+                .Select(e => new MecanicoEspecialidadeRel
+                {
+                    Especialidade_Id = e.EspecialidadeId,
+                    Nivel = e.Nivel.Trim(),
+                    Principal = e.Principal,
+                    Anotacoes = Normalize(e.Anotacoes)
+                })
+                .ToList();
+        }
+
+        if (dto.Contatos is { Count: > 0 })
+        {
+            mecanico.Contatos = dto.Contatos
+                .Select(c => new MecanicoContato
+                {
+                    Tipo = c.Tipo.Trim(),
+                    Valor = c.Valor.Trim(),
+                    Principal = c.Principal,
+                    Observacao = Normalize(c.Observacao)
+                })
+                .ToList();
+        }
+
+        if (dto.Enderecos is { Count: > 0 })
+        {
+            mecanico.Enderecos = dto.Enderecos
+                .Select(e => new MecanicoEndereco
+                {
+                    Tipo = e.Tipo.Trim(),
+                    Cep = e.Cep.Trim(),
+                    Logradouro = e.Logradouro.Trim(),
+                    Numero = e.Numero.Trim(),
+                    Bairro = e.Bairro.Trim(),
+                    Cidade = e.Cidade.Trim(),
+                    Estado = e.Estado.Trim(),
+                    Pais = Normalize(e.Pais),
+                    Complemento = Normalize(e.Complemento),
+                    Principal = e.Principal
+                })
+                .ToList();
+        }
+
+        if (dto.Documentos is { Count: > 0 })
+        {
+            mecanico.Documentos = dto.Documentos
+                .Select(d => new MecanicoDocumento
+                {
+                    Tipo = d.Tipo.Trim(),
+                    Numero = d.Numero.Trim(),
+                    Data_Emissao = d.DataEmissao,
+                    Data_Validade = d.DataValidade,
+                    Orgao_Expedidor = Normalize(d.OrgaoExpedidor),
+                    Arquivo_Url = Normalize(d.ArquivoUrl)
+                })
+                .ToList();
+        }
+
+        if (dto.Certificacoes is { Count: > 0 })
+        {
+            mecanico.Certificacoes = dto.Certificacoes
+                .Select(c => new MecanicoCertificacao
+                {
+                    Especialidade_Id = c.EspecialidadeId,
+                    Titulo = c.Titulo.Trim(),
+                    Instituicao = Normalize(c.Instituicao),
+                    Data_Conclusao = c.DataConclusao,
+                    Data_Validade = c.DataValidade,
+                    Codigo_Certificacao = Normalize(c.CodigoCertificacao)
+                })
+                .ToList();
+        }
+
+        if (dto.Disponibilidades is { Count: > 0 })
+        {
+            mecanico.Disponibilidades = dto.Disponibilidades
+                .Select(d => new MecanicoDisponibilidade
+                {
+                    Dia_Semana = d.DiaSemana,
+                    Hora_Inicio = d.HoraInicio,
+                    Hora_Fim = d.HoraFim,
+                    Capacidade_Atendimentos = d.CapacidadeAtendimentos
+                })
+                .ToList();
+        }
+
+        if (dto.Experiencias is { Count: > 0 })
+        {
+            mecanico.Experiencias = dto.Experiencias
+                .Select(e => new MecanicoExperiencia
+                {
+                    Empresa = e.Empresa.Trim(),
+                    Cargo = e.Cargo.Trim(),
+                    Data_Inicio = e.DataInicio,
+                    Data_Fim = e.DataFim,
+                    Resumo_Atividades = Normalize(e.ResumoAtividades)
+                })
+                .ToList();
+        }
+
+        return mecanico;
+    }
+
+    private static MecanicoDetalhesDto MapToMecanicoDetalhesDto(Mecanico mecanico)
+    {
+        var especialidades = mecanico.Especialidades?
+            .OrderByDescending(e => e.Principal)
+            .ThenBy(e => e.Nivel)
+            .Select(e => new MecanicoEspecialidadeResumoDto(
+                e.Especialidade_Id,
+                e.Especialidade?.Codigo,
+                e.Especialidade?.Nome,
+                e.Nivel,
+                e.Principal,
+                e.Anotacoes))
+            .ToList() ?? new List<MecanicoEspecialidadeResumoDto>();
+
+        var contatos = mecanico.Contatos?
+            .Select(c => new MecanicoContatoResumoDto(c.Id, c.Tipo, c.Valor, c.Principal, c.Observacao))
+            .ToList() ?? new List<MecanicoContatoResumoDto>();
+
+        var enderecos = mecanico.Enderecos?
+            .Select(e => new MecanicoEnderecoResumoDto(
+                e.Id,
+                e.Tipo,
+                e.Cep,
+                e.Logradouro,
+                e.Numero,
+                e.Bairro,
+                e.Cidade,
+                e.Estado,
+                e.Pais,
+                e.Complemento,
+                e.Principal))
+            .ToList() ?? new List<MecanicoEnderecoResumoDto>();
+
+        var documentos = mecanico.Documentos?
+            .Select(d => new MecanicoDocumentoResumoDto(
+                d.Id,
+                d.Tipo,
+                d.Numero,
+                d.Data_Emissao,
+                d.Data_Validade,
+                d.Orgao_Expedidor,
+                d.Arquivo_Url))
+            .ToList() ?? new List<MecanicoDocumentoResumoDto>();
+
+        var certificacoes = mecanico.Certificacoes?
+            .Select(c => new MecanicoCertificacaoResumoDto(
+                c.Id,
+                c.Especialidade_Id,
+                c.Titulo,
+                c.Instituicao,
+                c.Data_Conclusao,
+                c.Data_Validade,
+                c.Codigo_Certificacao,
+                c.Especialidade?.Nome))
+            .ToList() ?? new List<MecanicoCertificacaoResumoDto>();
+
+        var disponibilidades = mecanico.Disponibilidades?
+            .OrderBy(d => d.Dia_Semana)
+            .ThenBy(d => d.Hora_Inicio)
+            .Select(d => new MecanicoDisponibilidadeResumoDto(
+                d.Id,
+                d.Dia_Semana,
+                d.Hora_Inicio,
+                d.Hora_Fim,
+                d.Capacidade_Atendimentos))
+            .ToList() ?? new List<MecanicoDisponibilidadeResumoDto>();
+
+        var experiencias = mecanico.Experiencias?
+            .OrderByDescending(e => e.Data_Inicio ?? DateTime.MinValue)
+            .Select(e => new MecanicoExperienciaResumoDto(
+                e.Id,
+                e.Empresa,
+                e.Cargo,
+                e.Data_Inicio,
+                e.Data_Fim,
+                e.Resumo_Atividades))
+            .ToList() ?? new List<MecanicoExperienciaResumoDto>();
+
+        return new MecanicoDetalhesDto(
+            mecanico.Id,
+            mecanico.Codigo,
+            mecanico.Nome,
+            mecanico.Sobrenome,
+            mecanico.Nome_Social,
+            mecanico.Documento_Principal,
+            mecanico.Tipo_Documento,
+            mecanico.Data_Admissao,
+            mecanico.Data_Nascimento,
+            mecanico.Data_Demissao,
+            mecanico.Status,
+            mecanico.Especialidade_Principal_Id,
+            mecanico.EspecialidadePrincipal?.Nome,
+            mecanico.Nivel,
+            mecanico.Valor_Hora,
+            mecanico.Carga_Horaria_Semanal,
+            mecanico.Observacoes,
+            especialidades,
+            contatos,
+            enderecos,
+            documentos,
+            certificacoes,
+            disponibilidades,
+            experiencias);
+    }
+
+    private static string? Normalize(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     private static Cliente MapToEntity(ClienteCreateDto dto)
     {
         var cliente = new Cliente
@@ -550,4 +893,8 @@ public static class Endpoints
             anexos);
     }
 }
+
+
+
+
 
