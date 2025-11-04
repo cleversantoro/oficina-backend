@@ -13,10 +13,10 @@ public static class Endpoints
 {
     public static void MapOrdemServicoEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/ordens").WithTags("Ordem de ServiÃ§o");
+        var g = app.MapGroup("/ordens").WithTags("Ordem de Serviço");
 
         g.MapGet("/", async (OrdemServicoDbContext db) =>
-            Results.Ok(await db.Ordens.AsNoTracking().Include(o => o.Itens).ToListAsync())).WithSummary("Lista ordens de serviÃ§o");
+            Results.Ok(await db.Ordens.AsNoTracking().Include(o => o.Itens).ToListAsync())).WithSummary("Lista ordens de serviço");
 
         g.MapPost("/", async (OrdemCreateDto dto, OrdemServicoDbContext db, IValidator<OrdemCreateDto> v) =>
         {
@@ -28,7 +28,7 @@ public static class Endpoints
         g.MapPost("/{id:long}/itens", async (long id, ItemCreateDto dto, OrdemServicoDbContext db, IValidator<ItemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            if (await db.Ordens.FindAsync(id) is null) return Results.NotFound("OS nÃ£o encontrada");
+            if (await db.Ordens.FindAsync(id) is null) return Results.NotFound("OS não encontrada");
             var item = new ItemServico{ Ordem_Servico_Id=id, Peca_Id=dto.PecaId, Descricao=dto.Descricao, Quantidade=dto.Quantidade, Valor_Unitario=dto.ValorUnitario };
             db.Itens.Add(item); await db.SaveChangesAsync(); return Results.Created($"/ordens/{id}/itens/{item.Id}", item);
         }).WithSummary("Adiciona item na OS");

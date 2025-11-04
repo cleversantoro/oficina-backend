@@ -365,15 +365,208 @@ CREATE TABLE IF NOT EXISTS cad_mecanicos_experiencias (
 
 
 
+-- ============================================================================
+-- Catalogo de Fornecedores
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_segmentos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Codigo VARCHAR(20) NOT NULL,
+    Nome VARCHAR(120) NOT NULL,
+    Descricao VARCHAR(240),
+    Ativo TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_segmentos_codigo (Codigo),
+    UNIQUE KEY UX_cad_fornecedores_segmentos_nome (Nome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS cad_fornecedores (
     Id BIGINT NOT NULL AUTO_INCREMENT,
     Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Codigo VARCHAR(20) NOT NULL,
+    Tipo VARCHAR(10) NOT NULL,
     Razao_Social VARCHAR(160) NOT NULL,
-    Cnpj VARCHAR(20) NOT NULL,
-    Contato VARCHAR(160) NOT NULL,
+    Nome_Fantasia VARCHAR(160),
+    Documento VARCHAR(20) NOT NULL,
+    Inscricao_Estadual VARCHAR(30),
+    Inscricao_Municipal VARCHAR(30),
+    Segmento_Principal_Id BIGINT NULL,
+    Website VARCHAR(160),
+    Email VARCHAR(160),
+    Telefone_Principal VARCHAR(30),
+    Status VARCHAR(20) NOT NULL DEFAULT 'ATIVO',
+    Condicao_Pagamento_Padrao VARCHAR(120),
+    Prazo_Entrega_Medio INT NULL,
+    Nota_Media DECIMAL(4,2) NULL,
+    Observacoes VARCHAR(600),
+    Prazo_Garantia_Padrao VARCHAR(120),
+    Termos_Negociados VARCHAR(240),
+    Atendimento_Personalizado TINYINT(1) NOT NULL DEFAULT 0,
+    Retirada_Local TINYINT(1) NOT NULL DEFAULT 0,
+    Rating_Logistica DECIMAL(4,2) NULL,
+    Rating_Qualidade DECIMAL(4,2) NULL,
     PRIMARY KEY (Id),
-    UNIQUE KEY UX_cad_fornecedores_cnpj (Cnpj)
+    UNIQUE KEY UX_cad_fornecedores_codigo (Codigo),
+    UNIQUE KEY UX_cad_fornecedores_documento (Documento),
+    KEY IX_cad_fornecedores_segmento (Segmento_Principal_Id),
+    CONSTRAINT FK_cad_fornecedores_segmento FOREIGN KEY (Segmento_Principal_Id)
+        REFERENCES cad_fornecedores_segmentos (Id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_segmentos_rel (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Segmento_Id BIGINT NOT NULL,
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    Observacoes VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_segmentos_rel (Fornecedor_Id, Segmento_Id),
+    KEY IX_cad_fornecedores_segmentos_rel_segmento (Segmento_Id),
+    CONSTRAINT FK_cad_fornecedores_segmentos_rel_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_cad_fornecedores_segmentos_rel_segmento FOREIGN KEY (Segmento_Id)
+        REFERENCES cad_fornecedores_segmentos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_enderecos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Tipo VARCHAR(30) NOT NULL,
+    Cep VARCHAR(12),
+    Logradouro VARCHAR(160) NOT NULL,
+    Numero VARCHAR(20) NOT NULL,
+    Bairro VARCHAR(120) NOT NULL,
+    Cidade VARCHAR(120) NOT NULL,
+    Estado VARCHAR(60) NOT NULL,
+    Pais VARCHAR(80),
+    Complemento VARCHAR(120),
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    Observacao VARCHAR(240),
+    PRIMARY KEY (Id),
+    KEY IX_cad_fornecedores_enderecos_fornecedor_tipo (Fornecedor_Id, Tipo),
+    CONSTRAINT FK_cad_fornecedores_enderecos_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_contatos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Tipo VARCHAR(30) NOT NULL,
+    Valor VARCHAR(160) NOT NULL,
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    Observacao VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_contatos (Fornecedor_Id, Tipo, Valor),
+    CONSTRAINT FK_cad_fornecedores_contatos_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_representantes (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Nome VARCHAR(120) NOT NULL,
+    Cargo VARCHAR(120),
+    Email VARCHAR(160),
+    Telefone VARCHAR(30),
+    Celular VARCHAR(30),
+    Preferencia_Contato VARCHAR(30),
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    Observacoes VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_representantes (Fornecedor_Id, Nome),
+    CONSTRAINT FK_cad_fornecedores_representantes_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_bancos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Banco VARCHAR(80) NOT NULL,
+    Agencia VARCHAR(20),
+    Conta VARCHAR(20),
+    Digito VARCHAR(5),
+    Tipo_Conta VARCHAR(20),
+    Pix_Chave VARCHAR(120),
+    Observacoes VARCHAR(240),
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_bancos (Fornecedor_Id, Banco, Agencia, Conta, Digito),
+    CONSTRAINT FK_cad_fornecedores_bancos_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_documentos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Tipo VARCHAR(60) NOT NULL,
+    Numero VARCHAR(60) NOT NULL,
+    Data_Emissao DATE,
+    Data_Validade DATE,
+    Orgao_Expedidor VARCHAR(120),
+    Arquivo_Url VARCHAR(240),
+    Observacoes VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_documentos (Fornecedor_Id, Tipo, Numero),
+    CONSTRAINT FK_cad_fornecedores_documentos_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_certificacoes (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Titulo VARCHAR(160) NOT NULL,
+    Instituicao VARCHAR(160),
+    Data_Emissao DATE,
+    Data_Validade DATE,
+    Codigo_Certificacao VARCHAR(60),
+    Escopo VARCHAR(200),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_fornecedores_certificacoes (Fornecedor_Id, Titulo),
+    CONSTRAINT FK_cad_fornecedores_certificacoes_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS cad_fornecedores_avaliacoes (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Fornecedor_Id BIGINT NOT NULL,
+    Data_Avaliacao DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Avaliado_Por VARCHAR(120),
+    Categoria VARCHAR(60),
+    Nota DECIMAL(4,2) NOT NULL,
+    Comentarios VARCHAR(400),
+    PRIMARY KEY (Id),
+    KEY IX_cad_fornecedores_avaliacoes_fornecedor (Fornecedor_Id, Data_Avaliacao),
+    CONSTRAINT FK_cad_fornecedores_avaliacoes_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS cad_veiculos_marcas (
@@ -432,21 +625,178 @@ CREATE TABLE IF NOT EXISTS cad_veiculos (
 -- Estoque
 -- ============================================================================
 
+-- ============================================================================
+-- Estoque e Catalogo de Pecas
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS est_pecas_categorias (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Codigo VARCHAR(30) NOT NULL,
+    Nome VARCHAR(160) NOT NULL,
+    Categoria_Pai_Id BIGINT NULL,
+    Descricao VARCHAR(240),
+    Ativo TINYINT(1) NOT NULL DEFAULT 1,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_est_pecas_categorias_codigo (Codigo),
+    KEY IX_est_pecas_categorias_pai (Categoria_Pai_Id),
+    CONSTRAINT FK_est_pecas_categorias_pai FOREIGN KEY (Categoria_Pai_Id)
+        REFERENCES est_pecas_categorias (Id)
+        ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS est_pecas_unidades (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Sigla VARCHAR(10) NOT NULL,
+    Descricao VARCHAR(80) NOT NULL,
+    Observacao VARCHAR(120),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_est_pecas_unidades_sigla (Sigla)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS est_pecas_marcas (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Nome VARCHAR(160) NOT NULL,
+    Pais VARCHAR(80),
+    Website VARCHAR(160),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_est_pecas_marcas_nome (Nome)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS est_pecas (
     Id BIGINT NOT NULL AUTO_INCREMENT,
     Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
     Codigo VARCHAR(40) NOT NULL,
     Descricao VARCHAR(200) NOT NULL,
-    Preco_Unitario DECIMAL(18,2) NOT NULL DEFAULT 0,
-    Quantidade INT NOT NULL DEFAULT 0,
+    Descricao_Detalhada VARCHAR(600),
+    Categoria_Id BIGINT NULL,
+    Unidade_Id BIGINT NULL,
+    Marca_Id BIGINT NULL,
     Fornecedor_Id BIGINT NULL,
+    Numero_Fabricante VARCHAR(80),
+    Codigo_Barras VARCHAR(64),
+    Ncm VARCHAR(10),
+    Unidade_Compra VARCHAR(10),
+    Preco_Custo DECIMAL(18,2) NOT NULL DEFAULT 0,
+    Preco_Unitario DECIMAL(18,2) NOT NULL DEFAULT 0,
+    Preco_Minimo DECIMAL(18,2),
+    Preco_Maximo DECIMAL(18,2),
+    Margem_Sugerida DECIMAL(5,2),
+    Prazo_Reposicao INT,
+    Quantidade INT NOT NULL DEFAULT 0,
+    Estoque_Minimo INT NOT NULL DEFAULT 0,
+    Estoque_Maximo INT,
+    Localizacao_Estoque VARCHAR(60),
+    Peso_Gramas DECIMAL(10,2),
+    Altura_CM DECIMAL(10,2),
+    Largura_CM DECIMAL(10,2),
+    Comprimento_CM DECIMAL(10,2),
+    Observacoes VARCHAR(400),
+    Ativo TINYINT(1) NOT NULL DEFAULT 1,
     PRIMARY KEY (Id),
     UNIQUE KEY UX_est_pecas_codigo (Codigo),
+    UNIQUE KEY UX_est_pecas_codigo_barras (Codigo_Barras),
+    KEY IX_est_pecas_categoria (Categoria_Id),
+    KEY IX_est_pecas_unidade (Unidade_Id),
+    KEY IX_est_pecas_marca (Marca_Id),
     KEY IX_est_pecas_fornecedor (Fornecedor_Id),
+    CONSTRAINT FK_est_pecas_categoria FOREIGN KEY (Categoria_Id)
+        REFERENCES est_pecas_categorias (Id)
+        ON DELETE SET NULL,
+    CONSTRAINT FK_est_pecas_unidade FOREIGN KEY (Unidade_Id)
+        REFERENCES est_pecas_unidades (Id)
+        ON DELETE SET NULL,
+    CONSTRAINT FK_est_pecas_marca FOREIGN KEY (Marca_Id)
+        REFERENCES est_pecas_marcas (Id)
+        ON DELETE SET NULL,
     CONSTRAINT FK_est_pecas_fornecedor FOREIGN KEY (Fornecedor_Id)
         REFERENCES cad_fornecedores (Id)
         ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS est_pecas_fornecedores (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Peca_Id BIGINT NOT NULL,
+    Fornecedor_Id BIGINT NOT NULL,
+    Codigo_Fornecedor VARCHAR(60),
+    Prazo_Entrega_Dias INT,
+    Preco_Custo DECIMAL(18,2) NOT NULL DEFAULT 0,
+    Moeda VARCHAR(10) NOT NULL DEFAULT 'BRL',
+    Lote_Minimo INT,
+    Condicao_Pagamento VARCHAR(120),
+    Status VARCHAR(20) NOT NULL DEFAULT 'ATIVO',
+    Observacoes VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_est_pecas_fornecedores (Peca_Id, Fornecedor_Id),
+    KEY IX_est_pecas_fornecedores_fornecedor (Fornecedor_Id),
+    CONSTRAINT FK_est_pecas_fornecedores_peca FOREIGN KEY (Peca_Id)
+        REFERENCES est_pecas (Id)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_est_pecas_fornecedores_fornecedor FOREIGN KEY (Fornecedor_Id)
+        REFERENCES cad_fornecedores (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS est_pecas_aplicacoes (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Peca_Id BIGINT NOT NULL,
+    Modelo_Veiculo_Id BIGINT NOT NULL,
+    Ano_Inicio INT,
+    Ano_Fim INT,
+    Observacao VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_est_pecas_aplicacoes (Peca_Id, Modelo_Veiculo_Id, Ano_Inicio, Ano_Fim),
+    KEY IX_est_pecas_aplicacoes_modelo (Modelo_Veiculo_Id),
+    CONSTRAINT FK_est_pecas_aplicacoes_peca FOREIGN KEY (Peca_Id)
+        REFERENCES est_pecas (Id)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_est_pecas_aplicacoes_modelo FOREIGN KEY (Modelo_Veiculo_Id)
+        REFERENCES cad_veiculos_modelos (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS est_pecas_precos_historico (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Peca_Id BIGINT NOT NULL,
+    Data_Referencia DATE NOT NULL,
+    Preco_Custo DECIMAL(18,2) NOT NULL DEFAULT 0,
+    Preco_Venda DECIMAL(18,2) NOT NULL DEFAULT 0,
+    Moeda VARCHAR(10) NOT NULL DEFAULT 'BRL',
+    Fonte VARCHAR(120),
+    Observacao VARCHAR(240),
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_est_pecas_precos_historico (Peca_Id, Data_Referencia),
+    CONSTRAINT FK_est_pecas_precos_historico_peca FOREIGN KEY (Peca_Id)
+        REFERENCES est_pecas (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS est_pecas_arquivos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Peca_Id BIGINT NOT NULL,
+    Tipo VARCHAR(40) NOT NULL,
+    Nome_Arquivo VARCHAR(160) NOT NULL,
+    Url VARCHAR(240),
+    Observacao VARCHAR(240),
+    PRIMARY KEY (Id),
+    KEY IX_est_pecas_arquivos_peca_tipo (Peca_Id, Tipo),
+    CONSTRAINT FK_est_pecas_arquivos_peca FOREIGN KEY (Peca_Id)
+        REFERENCES est_pecas (Id)
+        ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS est_movimentacoes (
@@ -457,6 +807,13 @@ CREATE TABLE IF NOT EXISTS est_movimentacoes (
     Quantidade INT NOT NULL,
     Tipo VARCHAR(10) NOT NULL,
     Referencia VARCHAR(160),
+    Quantidade_Anterior INT,
+    Quantidade_Posterior INT,
+    Valor_Unitario DECIMAL(18,2),
+    Valor_Total DECIMAL(18,2),
+    Documento VARCHAR(60),
+    Origem VARCHAR(60),
+    Observacao VARCHAR(240),
     PRIMARY KEY (Id),
     KEY IX_est_movimentacoes_peca (Peca_Id),
     CONSTRAINT FK_est_movimentacoes_peca FOREIGN KEY (Peca_Id)

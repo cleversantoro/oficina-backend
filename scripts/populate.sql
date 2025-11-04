@@ -6,8 +6,15 @@ TRUNCATE TABLE fin_nfes;
 TRUNCATE TABLE fin_pagamentos;
 TRUNCATE TABLE os_itens;
 TRUNCATE TABLE os_ordens;
+TRUNCATE TABLE est_pecas_arquivos;
+TRUNCATE TABLE est_pecas_precos_historico;
+TRUNCATE TABLE est_pecas_aplicacoes;
+TRUNCATE TABLE est_pecas_fornecedores;
 TRUNCATE TABLE est_movimentacoes;
 TRUNCATE TABLE est_pecas;
+TRUNCATE TABLE est_pecas_marcas;
+TRUNCATE TABLE est_pecas_unidades;
+TRUNCATE TABLE est_pecas_categorias;
 TRUNCATE TABLE cad_veiculos;
 TRUNCATE TABLE cad_veiculos_modelos;
 TRUNCATE TABLE cad_veiculos_marcas;
@@ -19,7 +26,16 @@ TRUNCATE TABLE cad_clientes_contatos;
 TRUNCATE TABLE cad_clientes_enderecos;
 TRUNCATE TABLE cad_clientes_pf;
 TRUNCATE TABLE cad_clientes_pj;
+TRUNCATE TABLE cad_fornecedores_avaliacoes;
+TRUNCATE TABLE cad_fornecedores_certificacoes;
+TRUNCATE TABLE cad_fornecedores_documentos;
+TRUNCATE TABLE cad_fornecedores_bancos;
+TRUNCATE TABLE cad_fornecedores_representantes;
+TRUNCATE TABLE cad_fornecedores_contatos;
+TRUNCATE TABLE cad_fornecedores_enderecos;
+TRUNCATE TABLE cad_fornecedores_segmentos_rel;
 TRUNCATE TABLE cad_fornecedores;
+TRUNCATE TABLE cad_fornecedores_segmentos;
 TRUNCATE TABLE cad_mecanicos;
 TRUNCATE TABLE cad_clientes;
 TRUNCATE TABLE cad_clientes_origens;
@@ -113,13 +129,42 @@ VALUES
 (1004, 'Ana Beatriz', 'Diagnóstico eletrônico', 1, NOW(), NULL),
 (1005, 'Fábio Santos', 'Ar-condicionado', 1, NOW(), NULL);
 
-INSERT INTO cad_fornecedores (Id, Razao_Social, Cnpj, Contato, Created_At, Updated_At)
+INSERT INTO cad_fornecedores_segmentos (Id, Codigo, Nome, Descricao, Ativo, Created_At, Updated_At)
 VALUES
-(1101, 'Distribuidora Autosul LTDA', '00987654321098', 'comercial@autosul.com.br', NOW(), NULL),
-(1102, 'Peças Premium SA', '00112233445566', 'vendas@pecaspremium.com', NOW(), NULL),
-(1103, 'Logparts Comércio', '00334455667788', 'suporte@logparts.com.br', NOW(), NULL),
-(1104, 'Motores Brasil', '00778899001122', 'atendimento@motoresbr.com', NOW(), NULL),
-(1105, 'AutoClima Serviços', '00556677889900', 'contato@autoclima.com.br', NOW(), NULL);
+(2101, 'AUTOPE', 'Autopecas', 'Distribuidores de componentes mecanicos', 1, NOW(), NULL),
+(2102, 'LUBRI', 'Lubrificantes', 'Oleos e fluidos automotivos', 1, NOW(), NULL),
+(2103, 'ELETR', 'Eletrica e Eletronica', 'Sensores, modulos e sistemas de ignicao', 1, NOW(), NULL),
+(2104, 'CLIMA', 'Climatizacao', 'Componentes de HVAC automotivo', 1, NOW(), NULL),
+(2105, 'SUSP', 'Suspensao e Freios', 'Componentes de seguranca e suspensao', 1, NOW(), NULL);
+
+INSERT INTO cad_fornecedores (
+    Id, Codigo, Tipo, Razao_Social, Nome_Fantasia, Documento, Inscricao_Estadual,
+    Inscricao_Municipal, Segmento_Principal_Id, Website, Email, Telefone_Principal,
+    Status, Condicao_Pagamento_Padrao, Prazo_Entrega_Medio, Nota_Media, Observacoes,
+    Prazo_Garantia_Padrao, Termos_Negociados, Atendimento_Personalizado, Retirada_Local,
+    Rating_Logistica, Rating_Qualidade, Created_At, Updated_At
+)
+VALUES
+(1101, 'FORN-0001', 'PJ', 'Distribuidora Autosul LTDA', 'Autosul', '00987654321098', '112223334445', '123456789',
+ (SELECT Id FROM cad_fornecedores_segmentos WHERE Codigo = 'AUTOPE'), 'https://www.autosul.com.br', 'comercial@autosul.com.br',
+ '(11) 4002-8922', 'ATIVO', 'Boleto 28 dias', 5, 4.60, 'Linha premium de filtros, lubrificantes e componentes do motor.',
+ 'Garantia de 6 meses para itens mecanicos conforme fabricante.', 'Desconto de 3% para pagamento antecipado.', 1, 1, 4.70, 4.80, NOW(), NULL),
+(1102, 'FORN-0002', 'PJ', 'Pecas Premium SA', 'Premium Parts', '00112233445566', '998877665544', '445566778',
+ (SELECT Id FROM cad_fornecedores_segmentos WHERE Codigo = 'SUSP'), 'https://fornecedor-premium.example.com', 'vendas@pecaspremium.com',
+ '(11) 3254-7788', 'ATIVO', 'Pix imediato com 5% off ou boleto 21 dias', 4, 4.50, 'Especialista em freios e suspensao de alta performance.',
+ 'Garantia de 12 meses para itens homologados.', 'Entrega consignada mediante contrato.', 1, 0, 4.60, 4.75, NOW(), NULL),
+(1103, 'FORN-0003', 'PJ', 'Logparts Comercio e Logistica LTDA', 'Logparts', '00334455667788', '221133445566', '556677889',
+ (SELECT Id FROM cad_fornecedores_segmentos WHERE Codigo = 'ELETR'), 'https://www.logparts.com.br', 'suporte@logparts.com.br',
+ '(11) 2555-9900', 'ATIVO', 'Faturamento quinzenal com limite de credito ativo.', 3, 4.40, 'Distribuidor com centros em SP e PR.',
+ 'Garantia de 1 ano para modulos e componentes.', 'Frete incluso em pedidos acima de R$ 2.000,00.', 1, 1, 4.55, 4.60, NOW(), NULL),
+(1104, 'FORN-0004', 'PJ', 'Motores Brasil Comercial LTDA', 'Motores Brasil', '00778899001122', '445566771122', '112244335',
+ (SELECT Id FROM cad_fornecedores_segmentos WHERE Codigo = 'AUTOPE'), 'https://www.motoresbr.com', 'atendimento@motoresbr.com',
+ '(11) 3090-4020', 'ATIVO', 'Boleto 30 dias com limite sob consulta.', 7, 4.30, 'Kits de revisao e componentes pesados.',
+ 'Garantia ate 18 meses em linha premium.', 'Consignacao para itens de alta rotatividade.', 0, 1, 4.30, 4.55, NOW(), NULL),
+(1105, 'FORN-0005', 'PJ', 'AutoClima Servicos Integrados LTDA', 'AutoClima', '00556677889900', '556677889900', '778899001',
+ (SELECT Id FROM cad_fornecedores_segmentos WHERE Codigo = 'CLIMA'), 'https://www.autoclima.com.br', 'contato@autoclima.com.br',
+ '(11) 2789-4545', 'ATIVO', 'Pagamento em 21 dias com desconto progressivo.', 6, 4.20, 'Solucoes completas em climatizacao automotiva.',
+ 'Garantia de 1 ano com rede credenciada.', 'SLA emergencial de entrega em ate 12h em SP.', 1, 0, 4.40, 4.65, NOW(), NULL);
 
 INSERT INTO cad_veiculos_marcas (Id, Nome, Pais, Created_At, Updated_At)
 VALUES
@@ -145,13 +190,67 @@ VALUES
 (1404, 104, 'MNO0P12', 'Fiat', 1304, 2019, 'Vermelho', '8APZZZ15678945012', NULL, 'Flex', 'Uso particular', 1, NOW(), NULL),
 (1405, 105, 'QRS3T45', 'Ford', 1305, 2021, 'Azul', '9BFZXXE6549873210', '33445566778', 'Diesel', 'Frota TechFleet', 1, NOW(), NULL);
 
-INSERT INTO est_pecas (Id, Codigo, Descricao, Preco_Unitario, Quantidade, Fornecedor_Id, Created_At, Updated_At)
+INSERT INTO est_pecas_categorias (Id, Codigo, Nome, Descricao, Categoria_Pai_Id, Ativo, Created_At, Updated_At)
 VALUES
-(1501, 'FLT-001', 'Filtro de óleo sintético', 35.90, 120, 1101, NOW(), NULL),
-(1502, 'PST-020', 'Pastilha de freio dianteira', 89.50, 80, 1102, NOW(), NULL),
-(1503, 'VEL-004', 'Vela de ignição iridium', 45.00, 150, 1103, NOW(), NULL),
-(1504, 'ARF-112', 'Filtro de ar cabine', 55.75, 60, 1104, NOW(), NULL),
-(1505, 'ACM-550', 'Compressor de ar condicionado', 980.00, 10, 1105, NOW(), NULL);
+(501, 'CAT-ENG', 'Componentes de Motor', 'Itens aplicados ao grupo motriz', NULL, 1, NOW(), NULL),
+(502, 'CAT-FRE', 'Sistema de Freio', 'Pastilhas, discos e hidraulico', NULL, 1, NOW(), NULL),
+(503, 'CAT-CLM', 'Climatizacao', 'Componentes de ar condicionado e ventilacao', NULL, 1, NOW(), NULL),
+(504, 'CAT-FILTROS', 'Filtros e Elementos', 'Filtros de oleo, ar e combustivel', 501, 1, NOW(), NULL),
+(505, 'CAT-IGN', 'Ignicao', 'Velas, bobinas e cabos de velas', 501, 1, NOW(), NULL),
+(506, 'CAT-COMP', 'Compressores e HVAC', 'Compressores, evaporadores e filtros secadores', 503, 1, NOW(), NULL);
+
+INSERT INTO est_pecas_unidades (Id, Sigla, Descricao, Observacao, Created_At, Updated_At)
+VALUES
+(601, 'UN', 'Unidade', 'Unidade individual', NOW(), NULL),
+(602, 'CX', 'Caixa', 'Embalagem com multiplas unidades', NOW(), NULL),
+(603, 'KIT', 'Kit', 'Conjunto com componentes diversos', NOW(), NULL);
+
+INSERT INTO est_pecas_marcas (Id, Nome, Pais, Website, Created_At, Updated_At)
+VALUES
+(701, 'Mahle', 'Alemanha', 'https://www.mahle-aftermarket.com', NOW(), NULL),
+(702, 'Bosch', 'Alemanha', 'https://www.boschautoparts.com', NOW(), NULL),
+(703, 'NGK', 'Japao', 'https://www.ngkntk.com', NOW(), NULL),
+(704, 'Denso', 'Japao', 'https://www.denso.com', NOW(), NULL);
+
+INSERT INTO est_pecas (
+    Id, Codigo, Descricao, Descricao_Detalhada, Categoria_Id, Unidade_Id, Marca_Id, Fornecedor_Id,
+    Numero_Fabricante, Codigo_Barras, Ncm, Unidade_Compra, Preco_Custo, Preco_Unitario,
+    Preco_Minimo, Preco_Maximo, Margem_Sugerida, Prazo_Reposicao, Quantidade, Estoque_Minimo,
+    Estoque_Maximo, Localizacao_Estoque, Peso_Gramas, Altura_CM, Largura_CM, Comprimento_CM,
+    Observacoes, Ativo, Created_At, Updated_At
+)
+VALUES
+(1501, 'FLT-001', 'Filtro de oleo sintetico', 'Filtro linha leve com elemento em celulose reforcada e valvula anti-retorno.', 504, 601, 701, 1101, 'OC-90', '7891234560011', '84212390', 'UN', 24.50, 39.90, 35.00, 49.90, 35.00, 7, 120, 30, 250, 'A01-B2', 420, 9.50, 8.00, 8.00, 'Aplicacao em motores 1.0 a 2.0 flex.', 1, NOW(), NULL),
+(1502, 'PST-020', 'Pastilha de freio dianteira ceramica', 'Pastilha ceramica para uso severo com sensor de desgaste integrado.', 502, 603, 702, 1102, 'BPX-200', '7891234560202', '87083090', 'KIT', 142.00, 219.90, 199.90, 249.90, 35.00, 5, 80, 20, 150, 'B02-C1', 1800, 5.20, 12.00, 15.00, 'Indicado para SUVs e sedans premium.', 1, NOW(), NULL),
+(1503, 'VEL-004', 'Vela de ignicao iridium', 'Vela iridium de longa duracao com tecnologia laser escalonada.', 505, 602, 703, 1103, 'IFR6T11', '7891234560404', '85111000', 'CX', 72.30, 119.00, 109.00, 139.00, 32.00, 3, 150, 40, 220, 'C03-D4', 320, 9.00, 7.50, 7.50, 'Caixa com 4 unidades.', 1, NOW(), NULL),
+(1504, 'ARF-112', 'Filtro de ar cabine com carvao ativado', 'Elemento filtrante com tripla camada e neutralizacao de odores.', 504, 601, 701, 1101, 'LAK-888', '7891234560112', '84213100', 'UN', 32.10, 55.75, 48.00, 69.90, 30.00, 6, 60, 15, 120, 'A02-A5', 260, 3.50, 21.00, 21.00, 'Compatibilidade com SUVs compactos nacionais.', 1, NOW(), NULL),
+(1505, 'ACM-550', 'Compressor de ar condicionado 12v', 'Compressor rotativo blindado com oleo PAG46 incluso.', 506, 601, 704, 1105, '10S17C-PAG46', '7891234560550', '84143011', 'UN', 820.00, 980.00, 920.00, 1150.00, 32.00, 10, 10, 2, 30, 'D01-E1', 7800, 18.50, 24.00, 32.00, 'Inclui selo de garantia e manual tecnico.', 1, NOW(), NULL);
+
+INSERT INTO est_pecas_fornecedores (Id, Peca_Id, Fornecedor_Id, Codigo_Fornecedor, Prazo_Entrega_Dias, Preco_Custo, Moeda, Lote_Minimo, Condicao_Pagamento, Status, Observacoes, Created_At, Updated_At)
+VALUES
+(801, 1501, 1101, 'AUTO-FLT-001', 5, 24.50, 'BRL', 20, 'Boleto 28 dias', 'ATIVO', 'Remessa semanal programada.', NOW(), NULL),
+(802, 1501, 1104, 'MBR-FLT-90', 7, 25.80, 'BRL', 15, 'Boleto 21 dias', 'ATIVO', 'Lead time maior, usado como backup.', NOW(), NULL),
+(803, 1502, 1102, 'PP-BPX-200', 4, 142.00, 'BRL', 10, 'Pix 2% antecipado', 'ATIVO', 'Disponibilidade imediata para linha premium.', NOW(), NULL),
+(804, 1505, 1105, 'AC-550', 6, 820.00, 'BRL', 2, 'Boleto 21 dias', 'ATIVO', 'Compressor com garantia estendida.', NOW(), NULL);
+
+INSERT INTO est_pecas_aplicacoes (Id, Peca_Id, Modelo_Veiculo_Id, Ano_Inicio, Ano_Fim, Observacao, Created_At, Updated_At)
+VALUES
+(901, 1501, 1301, 2016, NULL, 'Motores 2.0 flex com codigo 3ZR-FBE.', NOW(), NULL),
+(902, 1502, 1303, 2019, NULL, 'Requer disco ventilado de 288mm.', NOW(), NULL),
+(903, 1504, 1302, 2020, NULL, 'Cabine com filtro anti polen.', NOW(), NULL),
+(904, 1505, 1305, 2017, NULL, 'Compatibilidade com motor 3.2 diesel.', NOW(), NULL);
+
+INSERT INTO est_pecas_precos_historico (Id, Peca_Id, Data_Referencia, Preco_Custo, Preco_Venda, Moeda, Fonte, Observacao, Created_At, Updated_At)
+VALUES
+(1001, 1501, DATE_SUB(CURDATE(), INTERVAL 90 DAY), 23.40, 36.90, 'BRL', 'Tabela Autosul 2024Q2', 'Reajuste aplicado em julho de 2024.', NOW(), NULL),
+(1002, 1502, DATE_SUB(CURDATE(), INTERVAL 60 DAY), 138.00, 212.00, 'BRL', 'Premium Parts Agosto 2024', 'Reajuste devido ao aumento de materia prima.', NOW(), NULL),
+(1003, 1505, DATE_SUB(CURDATE(), INTERVAL 120 DAY), 798.00, 950.00, 'BRL', 'AutoClima Maio 2024', 'Tabela antes do reajuste anual.', NOW(), NULL);
+
+INSERT INTO est_pecas_arquivos (Id, Peca_Id, Tipo, Nome_Arquivo, Url, Observacao, Created_At, Updated_At)
+VALUES
+(1101, 1501, 'Ficha Tecnica', 'ficha-flt-001.pdf', 'https://cdn.autosul.com.br/fichas/ficha-flt-001.pdf', 'Instrucoes de torque e substituicao.', NOW(), NULL),
+(1102, 1502, 'Manual de Instalacao', 'manual-pst-020.pdf', 'https://premium-parts.example.com/manual/manual-pst-020.pdf', 'Requer assentamento em 300km.', NOW(), NULL),
+(1103, 1505, 'Explodido Tecnico', 'explodido-acm-550.png', 'https://autoclima.com.br/manual/explodidos/explodido-acm-550.png', 'Diagrama de montagem detalhado.', NOW(), NULL);
 
 INSERT INTO est_movimentacoes (Id, Peca_Id, Quantidade, Tipo, Referencia, Created_At, Updated_At)
 VALUES
@@ -192,3 +291,5 @@ VALUES
 (2003, 1703, 'NFE2024-0003', '35241005000000000123550030000000033000000030', 'EMITIDA', NOW(), NULL),
 (2004, 1704, 'NFE2024-0004', '35241020000000000123550040000000044000000040', 'AGUARDANDO', NOW(), NULL),
 (2005, 1705, 'NFE2024-0005', '35240930000000000123550050000000055000000050', 'EMITIDA', NOW(), NULL);
+
+
