@@ -389,10 +389,92 @@ public class CadastroDbContext : DbContext
         modelBuilder.Entity<Fornecedor>(entity =>
         {
             entity.ToTable("cad_fornecedores");
-            entity.Property(p => p.Razao_Social).HasMaxLength(160).IsRequired();
+            entity.Property(p => p.Razao_Social).HasMaxLength(200).IsRequired();
+            entity.Property(p => p.Nome_Fantasia).HasMaxLength(200);
             entity.Property(p => p.Cnpj).HasMaxLength(20).IsRequired();
-            entity.Property(p => p.Contato).HasMaxLength(160).IsRequired();
+            entity.Property(p => p.Inscricao_Estadual).HasMaxLength(30);
+            entity.Property(p => p.Contato).HasMaxLength(100);
+            entity.Property(p => p.Email).HasMaxLength(100);
+            entity.Property(p => p.Telefone).HasMaxLength(30);
+            entity.Property(p => p.Observacoes).HasMaxLength(500);
+            entity.Property(p => p.Status).HasMaxLength(20).HasDefaultValue("Ativo");
             entity.HasIndex(p => p.Cnpj).IsUnique();
+            entity.HasMany(p => p.Enderecos)
+                .WithOne(e => e.Fornecedor)
+                .HasForeignKey(e => e.Fornecedor_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Contatos)
+                .WithOne(c => c.Fornecedor)
+                .HasForeignKey(c => c.Fornecedor_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Anexos)
+                .WithOne(a => a.Fornecedor)
+                .HasForeignKey(a => a.Fornecedor_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Bancos)
+                .WithOne(b => b.Fornecedor)
+                .HasForeignKey(b => b.Fornecedor_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Historicos)
+                .WithOne(h => h.Fornecedor)
+                .HasForeignKey(h => h.Fornecedor_Id)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<FornecedorEndereco>(entity =>
+        {
+            entity.ToTable("cad_fornecedor_endereco");
+            entity.Property(p => p.Tipo).HasMaxLength(50);
+            entity.Property(p => p.Cep).HasMaxLength(20);
+            entity.Property(p => p.Logradouro).HasMaxLength(200);
+            entity.Property(p => p.Numero).HasMaxLength(20);
+            entity.Property(p => p.Bairro).HasMaxLength(100);
+            entity.Property(p => p.Cidade).HasMaxLength(100);
+            entity.Property(p => p.Estado).HasMaxLength(50);
+            entity.Property(p => p.Pais).HasMaxLength(50);
+            entity.Property(p => p.Complemento).HasMaxLength(100);
+            entity.Property(p => p.Principal).HasDefaultValue(false);
+        });
+
+        modelBuilder.Entity<FornecedorContato>(entity =>
+        {
+            entity.ToTable("cad_fornecedor_contato");
+            entity.Property(p => p.Tipo).HasMaxLength(50);
+            entity.Property(p => p.Valor).HasMaxLength(100);
+            entity.Property(p => p.Principal).HasDefaultValue(false);
+            entity.Property(p => p.Observacao).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<FornecedorAnexo>(entity =>
+        {
+            entity.ToTable("cad_fornecedor_anexo");
+            entity.Property(p => p.Nome).HasMaxLength(200);
+            entity.Property(p => p.Tipo).HasMaxLength(50);
+            entity.Property(p => p.Url).HasMaxLength(500);
+            entity.Property(p => p.Observacao).HasMaxLength(200);
+            entity.Property(p => p.Data_Upload).HasDefaultValueSql("CURRENT_TIMESTAMP");
+        });
+
+        modelBuilder.Entity<FornecedorBanco>(entity =>
+        {
+            entity.ToTable("cad_fornecedor_banco");
+            entity.Property(p => p.Banco).HasMaxLength(100);
+            entity.Property(p => p.Agencia).HasMaxLength(20);
+            entity.Property(p => p.Conta).HasMaxLength(30);
+            entity.Property(p => p.Tipo_Conta).HasMaxLength(20);
+            entity.Property(p => p.Titular).HasMaxLength(100);
+            entity.Property(p => p.Documento_Titular).HasMaxLength(30);
+            entity.Property(p => p.Pix_Chave).HasMaxLength(100);
+        });
+
+        modelBuilder.Entity<FornecedorHistorico>(entity =>
+        {
+            entity.ToTable("cad_fornecedor_historico");
+            entity.Property(p => p.Data_Alteracao).HasDefaultValueSql("CURRENT_TIMESTAMP");
+            entity.Property(p => p.Usuario).HasMaxLength(100);
+            entity.Property(p => p.Campo).HasMaxLength(100);
+            entity.Property(p => p.Valor_Antigo).HasColumnType("text");
+            entity.Property(p => p.Valor_Novo).HasColumnType("text");
         });
     }
 }

@@ -152,6 +152,25 @@ public record MecanicoDetalhesDto(
     IReadOnlyCollection<MecanicoExperienciaResumoDto> Experiencias
 );
 
-public record FornecedorCreateDto(string RazaoSocial, string Cnpj, string Contato, long? Fornecedor_Id);
+public record FornecedorEnderecoDto(string Tipo, string Cep, string Logradouro, string Numero, string Bairro, string Cidade, string Estado, string Pais, string? Complemento, bool Principal);
+public record FornecedorContatoDto(string Tipo, string Valor, bool Principal, string? Observacao);
+public record FornecedorAnexoDto(string Nome, string Tipo, string Url, string? Observacao);
+public record FornecedorBancoDto(string Banco, string Agencia, string Conta, string TipoConta, string Titular, string DocumentoTitular, string? PixChave);
+public record FornecedorHistoricoDto(DateTime DataAlteracao, string Usuario, string Campo, string? ValorAntigo, string? ValorNovo);
 
+public record FornecedorCreateDto(
+ string RazaoSocial,
+ string? NomeFantasia,
+ string Cnpj,
+ string? InscricaoEstadual,
+ string? Contato,
+ string? Email,
+ string? Telefone,
+ string? Observacoes,
+ string Status,
+ IReadOnlyCollection<FornecedorEnderecoDto>? Enderecos,
+ IReadOnlyCollection<FornecedorContatoDto>? Contatos,
+ IReadOnlyCollection<FornecedorAnexoDto>? Anexos,
+ IReadOnlyCollection<FornecedorBancoDto>? Bancos
+);
 
