@@ -16,29 +16,196 @@ public static class Endpoints
         var g = app.MapGroup("/ordens").WithTags("Ordem de Serviço");
 
         g.MapGet("/", async (OrdemServicoDbContext db) =>
-            Results.Ok(await db.Ordens.AsNoTracking().Include(o => o.Itens).ToListAsync())).WithSummary("Lista ordens de serviço");
+             Results.Ok(await db.Ordens
+                .Include(o => o.Itens)
+                .Include(o => o.Anexos)
+                .Include(o => o.Historicos)
+                .Include(o => o.Checklists)
+                .Include(o => o.Avaliacoes)
+                .Include(o => o.Pagamentos)
+                .Include(o => o.Observacoes)
+                .AsNoTracking().ToListAsync()))
+             .WithSummary("Lista ordens de serviço");
+
+        g.MapGet("/{id:long}", async (long id, OrdemServicoDbContext db) =>
+        {
+            var ordem = await db.Ordens
+                .Include(o => o.Itens)
+                .Include(o => o.Anexos)
+                .Include(o => o.Historicos)
+                .Include(o => o.Checklists)
+                .Include(o => o.Avaliacoes)
+                .Include(o => o.Pagamentos)
+                .Include(o => o.Observacoes)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(o => o.Id == id);
+            return ordem is null ? Results.NotFound() : Results.Ok(ordem);
+        }).WithSummary("Detalhes da ordem de serviço");
 
         g.MapPost("/", async (OrdemCreateDto dto, OrdemServicoDbContext db, IValidator<OrdemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            var os = new OrdemServico.Domain.OrdemServico{ Cliente_Id=dto.Cliente_Id, Mecanico_Id=dto.MecanicoId, Descricao_Problema=dto.DescricaoProblema };
+            var os = new OrdemServico.Domain.OrdemServico{
+                Cliente_Id = dto.ClienteId,
+                Mecanico_Id = dto.MecanicoId,
+                Descricao_Problema = dto.DescricaoProblema,
+                Itens = dto.Itens?.Select(i => new ItemServico{
+                    Peca_Id = i.PecaId,
+                    Descricao = i.Descricao,
+                    Quantidade = i.Quantidade,
+                    Valor_Unitario = i.ValorUnitario
+                }).ToList() ?? new(),
+                Anexos = dto.Anexos?.Select(a => new OrdemServicoAnexo{
+                    Nome = a.Nome,
+                    Tipo = a.Tipo,
+                    Url = a.Url,
+                    Observacao = a.Observacao
+                }).ToList() ?? new(),
+                Checklists = dto.Checklists?.Select(c => new OrdemServicoChecklist{
+                    Item = c.Item,
+                    Realizado = c.Realizado,
+                    Observacao = c.Observacao
+                }).ToList() ?? new()
+            };
             db.Ordens.Add(os); await db.SaveChangesAsync(); return Results.Created($"/ordens/{os.Id}", os);
         }).WithSummary("Cria OS");
 
-        g.MapPost("/{id:long}/itens", async (long id, ItemCreateDto dto, OrdemServicoDbContext db, IValidator<ItemCreateDto> v) =>
+        g.MapPut("/{id:long}", async (long id, OrdemCreateDto dto, OrdemServicoDbContext db, IValidator<OrdemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            if (await db.Ordens.FindAsync(id) is null) return Results.NotFound("OS não encontrada");
-            var item = new ItemServico{ Ordem_Servico_Id=id, Peca_Id=dto.PecaId, Descricao=dto.Descricao, Quantidade=dto.Quantidade, Valor_Unitario=dto.ValorUnitario };
-            db.Itens.Add(item); await db.SaveChangesAsync(); return Results.Created($"/ordens/{id}/itens/{item.Id}", item);
-        }).WithSummary("Adiciona item na OS");
+            var os = await db.Ordens
+                .Include(o => o.Itens)
+                .Include(o => o.Anexos)
+                .Include(o => o.Checklists)
+                .FirstOrDefaultAsync(o => o.Id == id);
+            if (os is null) return Results.NotFound();
+            os.Cliente_Id = dto.ClienteId;
+            os.Mecanico_Id = dto.MecanicoId;
+            os.Descricao_Problema = dto.DescricaoProblema;
+            db.Itens.RemoveRange(os.Itens);
+            db.Set<OrdemServicoAnexo>().RemoveRange(os.Anexos);
+            db.Set<OrdemServicoChecklist>().RemoveRange(os.Checklists);
+            os.Itens = dto.Itens?.Select(i => new ItemServico{
+                Peca_Id = i.PecaId,
+                Descricao = i.Descricao,
+                Quantidade = i.Quantidade,
+                Valor_Unitario = i.ValorUnitario
+            }).ToList() ?? new();
+            os.Anexos = dto.Anexos?.Select(a => new OrdemServicoAnexo{
+                Nome = a.Nome,
+                Tipo = a.Tipo,
+                Url = a.Url,
+                Observacao = a.Observacao
+            }).ToList() ?? new();
+            os.Checklists = dto.Checklists?.Select(c => new OrdemServicoChecklist{
+                Item = c.Item,
+                Realizado = c.Realizado,
+                Observacao = c.Observacao
+            }).ToList() ?? new();
+            await db.SaveChangesAsync();
+            return Results.Ok(os);
+        }).WithSummary("Atualiza OS");
 
-        g.MapPut("/{id:long}/status", async (long id, string status, OrdemServicoDbContext db) =>
+        g.MapDelete("/{id:long}", async (long id, OrdemServicoDbContext db) =>
         {
-            var os = await db.Ordens.FindAsync(id); if (os is null) return Results.NotFound();
-            os.Status = status.ToUpper(); if (os.Status=="CONCLUIDA") os.Data_Conclusao=DateTime.UtcNow; os.Touch();
-            await db.SaveChangesAsync(); return Results.Ok(os);
-        }).WithSummary("Altera status da OS");
+            var os = await db.Ordens.FirstOrDefaultAsync(o => o.Id == id);
+            if (os is null) return Results.NotFound();
+            db.Ordens.Remove(os);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Exclui OS");
+
+        // Anexos
+        g.MapPost("/{id:long}/anexos", async (long id, OrdemServicoAnexoDto dto, OrdemServicoDbContext db) =>
+        {
+            var ordem = await db.Ordens.Include(o => o.Anexos).FirstOrDefaultAsync(o => o.Id == id);
+            if (ordem is null) return Results.NotFound();
+            var anexo = new OrdemServicoAnexo { Ordem_Servico_Id = id, Nome = dto.Nome, Tipo = dto.Tipo, Url = dto.Url, Observacao = dto.Observacao };
+            ordem.Anexos.Add(anexo);
+            await db.SaveChangesAsync();
+            return Results.Created($"/ordens/{id}/anexos/{anexo.Id}", anexo);
+        }).WithSummary("Adiciona anexo à OS");
+        g.MapDelete("/{id:long}/anexos/{anexoId:long}", async (long id, long anexoId, OrdemServicoDbContext db) =>
+        {
+            var anexo = await db.Set<OrdemServicoAnexo>().FirstOrDefaultAsync(a => a.Ordem_Servico_Id == id && a.Id == anexoId);
+            if (anexo is null) return Results.NotFound();
+            db.Set<OrdemServicoAnexo>().Remove(anexo);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Remove anexo da OS");
+        // Checklists
+        g.MapPost("/{id:long}/checklists", async (long id, OrdemServicoChecklistDto dto, OrdemServicoDbContext db) =>
+        {
+            var ordem = await db.Ordens.Include(o => o.Checklists).FirstOrDefaultAsync(o => o.Id == id);
+            if (ordem is null) return Results.NotFound();
+            var checklist = new OrdemServicoChecklist { Ordem_Servico_Id = id, Item = dto.Item, Realizado = dto.Realizado, Observacao = dto.Observacao };
+            ordem.Checklists.Add(checklist);
+            await db.SaveChangesAsync();
+            return Results.Created($"/ordens/{id}/checklists/{checklist.Id}", checklist);
+        }).WithSummary("Adiciona checklist à OS");
+        g.MapDelete("/{id:long}/checklists/{checklistId:long}", async (long id, long checklistId, OrdemServicoDbContext db) =>
+        {
+            var checklist = await db.Set<OrdemServicoChecklist>().FirstOrDefaultAsync(c => c.Ordem_Servico_Id == id && c.Id == checklistId);
+            if (checklist is null) return Results.NotFound();
+            db.Set<OrdemServicoChecklist>().Remove(checklist);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Remove checklist da OS");
+        // Avaliações
+        g.MapPost("/{id:long}/avaliacoes", async (long id, OrdemServicoAvaliacaoDto dto, OrdemServicoDbContext db) =>
+        {
+            var ordem = await db.Ordens.Include(o => o.Avaliacoes).FirstOrDefaultAsync(o => o.Id == id);
+            if (ordem is null) return Results.NotFound();
+            var avaliacao = new OrdemServicoAvaliacao { Ordem_Servico_Id = id, Nota = dto.Nota, Comentario = dto.Comentario, Usuario = dto.Usuario };
+            ordem.Avaliacoes.Add(avaliacao);
+            await db.SaveChangesAsync();
+            return Results.Created($"/ordens/{id}/avaliacoes/{avaliacao.Id}", avaliacao);
+        }).WithSummary("Adiciona avaliação à OS");
+        g.MapDelete("/{id:long}/avaliacoes/{avaliacaoId:long}", async (long id, long avaliacaoId, OrdemServicoDbContext db) =>
+        {
+            var avaliacao = await db.Set<OrdemServicoAvaliacao>().FirstOrDefaultAsync(a => a.Ordem_Servico_Id == id && a.Id == avaliacaoId);
+            if (avaliacao is null) return Results.NotFound();
+            db.Set<OrdemServicoAvaliacao>().Remove(avaliacao);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Remove avaliação da OS");
+        // Pagamentos
+        g.MapPost("/{id:long}/pagamentos", async (long id, OrdemServicoPagamentoDto dto, OrdemServicoDbContext db) =>
+        {
+            var ordem = await db.Ordens.Include(o => o.Pagamentos).FirstOrDefaultAsync(o => o.Id == id);
+            if (ordem is null) return Results.NotFound();
+            var pagamento = new OrdemServicoPagamento { Ordem_Servico_Id = id, Valor = dto.Valor, Status = dto.Status, Data_Pagamento = dto.DataPagamento, Metodo = dto.Metodo, Observacao = dto.Observacao };
+            ordem.Pagamentos.Add(pagamento);
+            await db.SaveChangesAsync();
+            return Results.Created($"/ordens/{id}/pagamentos/{pagamento.Id}", pagamento);
+        }).WithSummary("Adiciona pagamento à OS");
+        g.MapDelete("/{id:long}/pagamentos/{pagamentoId:long}", async (long id, long pagamentoId, OrdemServicoDbContext db) =>
+        {
+            var pagamento = await db.Set<OrdemServicoPagamento>().FirstOrDefaultAsync(p => p.Ordem_Servico_Id == id && p.Id == pagamentoId);
+            if (pagamento is null) return Results.NotFound();
+            db.Set<OrdemServicoPagamento>().Remove(pagamento);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Remove pagamento da OS");
+        // Observações
+        g.MapPost("/{id:long}/observacoes", async (long id, OrdemServicoObservacaoDto dto, OrdemServicoDbContext db) =>
+        {
+            var ordem = await db.Ordens.Include(o => o.Observacoes).FirstOrDefaultAsync(o => o.Id == id);
+            if (ordem is null) return Results.NotFound();
+            var obs = new OrdemServicoObservacao { Ordem_Servico_Id = id, Usuario = dto.Usuario, Texto = dto.Texto };
+            ordem.Observacoes.Add(obs);
+            await db.SaveChangesAsync();
+            return Results.Created($"/ordens/{id}/observacoes/{obs.Id}", obs);
+        }).WithSummary("Adiciona observação à OS");
+        g.MapDelete("/{id:long}/observacoes/{obsId:long}", async (long id, long obsId, OrdemServicoDbContext db) =>
+        {
+            var obs = await db.Set<OrdemServicoObservacao>().FirstOrDefaultAsync(o => o.Ordem_Servico_Id == id && o.Id == obsId);
+            if (obs is null) return Results.NotFound();
+            db.Set<OrdemServicoObservacao>().Remove(obs);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Remove observação da OS");
     }
 }
+
 

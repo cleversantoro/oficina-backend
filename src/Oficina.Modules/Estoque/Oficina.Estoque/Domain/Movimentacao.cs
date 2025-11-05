@@ -6,5 +6,8 @@ public class Movimentacao : Entity
     public int Quantidade { get; set; }
     public string Tipo { get; set; } = default!;
     public string? Referencia { get; set; }
+    public DateTime Data_Movimentacao { get; set; } = DateTime.UtcNow;
+    public string? Usuario { get; set; }
 }
+
 

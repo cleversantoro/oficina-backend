@@ -7,5 +7,11 @@ public class Pagamento : Entity
     public decimal Valor { get; set; }
     public string Status { get; set; } = "PENDENTE";
     public string? Transacao_Id { get; set; }
+    public long? Cliente_Id { get; set; }
+    public long? Fornecedor_Id { get; set; }
+    public long? Metodo_Id { get; set; }
+    public string? Observacao { get; set; }
+    public DateTime? Data_Pagamento { get; set; }
 }
+
 
