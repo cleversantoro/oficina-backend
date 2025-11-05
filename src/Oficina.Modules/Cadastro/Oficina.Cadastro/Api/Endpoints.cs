@@ -154,6 +154,12 @@ public static class Endpoints
             return Results.Ok(result);
         }).WithSummary("Lista mecânicos");
 
+        m.MapGet("/mecanicos/{id:long}", async (long id, CadastroDbContext db) =>
+        {
+            var mecanico = await CarregarMecanicoCompleto(db, id);
+            return mecanico is null ? Results.NotFound() : Results.Ok(MapToMecanicoDetalhesDto(mecanico));
+        }).WithSummary("Obtém mecânico por ID");
+
         m.MapPost("/mecanicos", async (MecanicoCreateDto dto, CadastroDbContext db, IValidator<MecanicoCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto);
@@ -229,6 +235,139 @@ public static class Endpoints
 
             return Results.Created($"/cadastro/mecanicos/{mecanico.Id}", MapToMecanicoDetalhesDto(created));
         }).WithSummary("Cria mecânico");
+
+        m.MapPut("/mecanicos/{id:long}", async (long id, MecanicoCreateDto dto, CadastroDbContext db, IValidator<MecanicoCreateDto> v) =>
+        {
+            var vr = await v.ValidateAsync(dto);
+            if (!vr.IsValid)
+            {
+                return Results.ValidationProblem(vr.ToDictionary());
+            }
+
+            var mecanico = await db.Mecanicos
+                .Include(m => m.Especialidades)
+                .Include(m => m.Contatos)
+                .Include(m => m.Enderecos)
+                .Include(m => m.Documentos)
+                .Include(m => m.Certificacoes)
+                .Include(m => m.Disponibilidades)
+                .Include(m => m.Experiencias)
+                .FirstOrDefaultAsync(m => m.Id == id);
+            if (mecanico is null)
+            {
+                return Results.NotFound();
+            }
+
+            // Remove coleções existentes
+            db.MecanicoEspecialidadesRel.RemoveRange(mecanico.Especialidades);
+            db.MecanicoContatos.RemoveRange(mecanico.Contatos);
+            db.MecanicoEnderecos.RemoveRange(mecanico.Enderecos);
+            db.MecanicoDocumentos.RemoveRange(mecanico.Documentos);
+            db.MecanicoCertificacoes.RemoveRange(mecanico.Certificacoes);
+            db.MecanicoDisponibilidades.RemoveRange(mecanico.Disponibilidades);
+            db.MecanicoExperiencias.RemoveRange(mecanico.Experiencias);
+
+            // Atualiza propriedades simples
+            mecanico.Codigo = dto.Codigo.Trim();
+            mecanico.Nome = dto.Nome.Trim();
+            mecanico.Sobrenome = Normalize(dto.Sobrenome);
+            mecanico.Nome_Social = Normalize(dto.NomeSocial);
+            mecanico.Documento_Principal = dto.DocumentoPrincipal.Trim();
+            mecanico.Tipo_Documento = dto.TipoDocumento;
+            mecanico.Data_Admissao = dto.DataAdmissao;
+            mecanico.Data_Nascimento = dto.DataNascimento;
+            mecanico.Data_Demissao = dto.DataDemissao;
+            mecanico.Status = string.IsNullOrWhiteSpace(dto.Status) ? "Ativo" : dto.Status.Trim();
+            mecanico.Especialidade_Principal_Id = dto.EspecialidadePrincipalId;
+            mecanico.Nivel = string.IsNullOrWhiteSpace(dto.Nivel) ? "Pleno" : dto.Nivel.Trim();
+            mecanico.Valor_Hora = dto.ValorHora;
+            mecanico.Carga_Horaria_Semanal = dto.CargaHorariaSemanal;
+            mecanico.Observacoes = Normalize(dto.Observacoes);
+
+            // Atualiza coleções
+            mecanico.Especialidades = dto.Especialidades?.Select(e => new MecanicoEspecialidadeRel
+            {
+                Especialidade_Id = e.EspecialidadeId,
+                Nivel = e.Nivel.Trim(),
+                Principal = e.Principal,
+                Anotacoes = Normalize(e.Anotacoes)
+            }).ToList() ?? new List<MecanicoEspecialidadeRel>();
+
+            mecanico.Contatos = dto.Contatos?.Select(c => new MecanicoContato
+            {
+                Tipo = c.Tipo.Trim(),
+                Valor = c.Valor.Trim(),
+                Principal = c.Principal,
+                Observacao = Normalize(c.Observacao)
+            }).ToList() ?? new List<MecanicoContato>();
+
+            mecanico.Enderecos = dto.Enderecos?.Select(e => new MecanicoEndereco
+            {
+                Tipo = e.Tipo.Trim(),
+                Cep = e.Cep.Trim(),
+                Logradouro = e.Logradouro.Trim(),
+                Numero = e.Numero.Trim(),
+                Bairro = e.Bairro.Trim(),
+                Cidade = e.Cidade.Trim(),
+                Estado = e.Estado.Trim(),
+                Pais = Normalize(e.Pais),
+                Complemento = Normalize(e.Complemento),
+                Principal = e.Principal
+            }).ToList() ?? new List<MecanicoEndereco>();
+
+            mecanico.Documentos = dto.Documentos?.Select(d => new MecanicoDocumento
+            {
+                Tipo = d.Tipo.Trim(),
+                Numero = d.Numero.Trim(),
+                Data_Emissao = d.DataEmissao,
+                Data_Validade = d.DataValidade,
+                Orgao_Expedidor = Normalize(d.OrgaoExpedidor),
+                Arquivo_Url = Normalize(d.ArquivoUrl)
+            }).ToList() ?? new List<MecanicoDocumento>();
+
+            mecanico.Certificacoes = dto.Certificacoes?.Select(c => new MecanicoCertificacao
+            {
+                Especialidade_Id = c.EspecialidadeId,
+                Titulo = c.Titulo.Trim(),
+                Instituicao = Normalize(c.Instituicao),
+                Data_Conclusao = c.DataConclusao,
+                Data_Validade = c.DataValidade,
+                Codigo_Certificacao = Normalize(c.CodigoCertificacao)
+            }).ToList() ?? new List<MecanicoCertificacao>();
+
+            mecanico.Disponibilidades = dto.Disponibilidades?.Select(d => new MecanicoDisponibilidade
+            {
+                Dia_Semana = d.DiaSemana,
+                Hora_Inicio = d.HoraInicio,
+                Hora_Fim = d.HoraFim,
+                Capacidade_Atendimentos = d.CapacidadeAtendimentos
+            }).ToList() ?? new List<MecanicoDisponibilidade>();
+
+            mecanico.Experiencias = dto.Experiencias?.Select(e => new MecanicoExperiencia
+            {
+                Empresa = e.Empresa.Trim(),
+                Cargo = e.Cargo.Trim(),
+                Data_Inicio = e.DataInicio,
+                Data_Fim = e.DataFim,
+                Resumo_Atividades = Normalize(e.ResumoAtividades)
+            }).ToList() ?? new List<MecanicoExperiencia>();
+
+            await db.SaveChangesAsync();
+            var atualizado = await CarregarMecanicoCompleto(db, mecanico.Id);
+            return Results.Ok(MapToMecanicoDetalhesDto(atualizado!));
+        }).WithSummary("Atualiza mecânico");
+
+        m.MapDelete("/mecanicos/{id:long}", async (long id, CadastroDbContext db) =>
+        {
+            var mecanico = await db.Mecanicos.FirstOrDefaultAsync(m => m.Id == id);
+            if (mecanico is null)
+            {
+                return Results.NotFound();
+            }
+            db.Mecanicos.Remove(mecanico);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Exclui mecânico");
 
         //Fornecedores
         var f = app.MapGroup("/cadastro").WithTags("Fornecedores");
@@ -905,6 +1044,10 @@ public static class Endpoints
 
     #endregion
 }
+
+
+
+
 
 
 

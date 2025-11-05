@@ -42,7 +42,7 @@ var app = builder.Build();
 app.UseCors("default");
 app.UseSwagger();
 app.UseSwaggerUI(c => c.DocumentTitle = "Oficina API");
-app.MapGet("/health", () => Results.Ok(new { status = "ok", ts = DateTime.UtcNow }));
+app.MapGet("/health", () => Results.Ok(new { status = "ok", ts = DateTime.UtcNow })).WithTags("Health").WithSummary("Verifica se a API esta online.");
 
 // Endpoints
 app.MapCadastroEndpoints();
