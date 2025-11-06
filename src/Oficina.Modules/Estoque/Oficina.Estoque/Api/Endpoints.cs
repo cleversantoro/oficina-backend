@@ -13,7 +13,7 @@ public static class Endpoints
 {
     public static void MapEstoqueEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/estoque").WithTags("Estoque");
+        var g = app.MapGroup("/estoque").WithTags("Estoque - Peças");
 
         g.MapGet("/pecas", async (EstoqueDbContext db) =>
             Results.Ok(await db.Pecas
@@ -62,7 +62,6 @@ public static class Endpoints
             };
             db.Pecas.Add(p); await db.SaveChangesAsync(); return Results.Created($"/estoque/pecas/{p.Id}", p);
         }).WithSummary("Cria peça");
-
         g.MapPut("/pecas/{id:long}", async (long id, PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) => {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
             var peca = await db.Pecas
@@ -99,7 +98,6 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(peca);
         }).WithSummary("Atualiza peça");
-
         g.MapDelete("/pecas/{id:long}", async (long id, EstoqueDbContext db) => {
             var peca = await db.Pecas.FirstOrDefaultAsync(p => p.Id == id);
             if (peca is null) return Results.NotFound();
@@ -108,20 +106,21 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Exclui peça");
 
-        g.MapGet("/fabricantes", async (EstoqueDbContext db) => Results.Ok(await db.Fabricantes.AsNoTracking().ToListAsync())).WithSummary("Lista fabricantes");
-        g.MapGet("/fabricantes/{id:long}", async (long id, EstoqueDbContext db) =>
+        var f = app.MapGroup("/estoque").WithTags("Estoque - Fabricantes");
+        f.MapGet("/fabricantes", async (EstoqueDbContext db) => Results.Ok(await db.Fabricantes.AsNoTracking().ToListAsync())).WithSummary("Lista fabricantes");
+        f.MapGet("/fabricantes/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var fab = await db.Fabricantes.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
             return fab is null ? Results.NotFound() : Results.Ok(fab);
         }).WithSummary("Detalhes do fabricante");
-        g.MapPost("/fabricantes", async (FabricanteDto dto, EstoqueDbContext db) =>
+        f.MapPost("/fabricantes", async (FabricanteDto dto, EstoqueDbContext db) =>
         {
             var fab = new Fabricante { Nome = dto.Nome, Cnpj = dto.Cnpj, Contato = dto.Contato };
             db.Fabricantes.Add(fab);
             await db.SaveChangesAsync();
             return Results.Created($"/estoque/fabricantes/{fab.Id}", fab);
         }).WithSummary("Cria fabricante");
-        g.MapPut("/fabricantes/{id:long}", async (long id, FabricanteDto dto, EstoqueDbContext db) =>
+        f.MapPut("/fabricantes/{id:long}", async (long id, FabricanteDto dto, EstoqueDbContext db) =>
         {
             var fab = await db.Fabricantes.FindAsync(id);
             if (fab is null) return Results.NotFound();
@@ -131,7 +130,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(fab);
         }).WithSummary("Atualiza fabricante");
-        g.MapDelete("/fabricantes/{id:long}", async (long id, EstoqueDbContext db) =>
+        f.MapDelete("/fabricantes/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var fab = await db.Fabricantes.FindAsync(id);
             if (fab is null) return Results.NotFound();
@@ -140,20 +139,21 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Exclui fabricante");
 
-        g.MapGet("/categorias", async (EstoqueDbContext db) => Results.Ok(await db.Categorias.AsNoTracking().ToListAsync())).WithSummary("Lista categorias");
-        g.MapGet("/categorias/{id:long}", async (long id, EstoqueDbContext db) =>
+        var c = app.MapGroup("/estoque").WithTags("Estoque - Categorias");
+        c.MapGet("/categorias", async (EstoqueDbContext db) => Results.Ok(await db.Categorias.AsNoTracking().ToListAsync())).WithSummary("Lista categorias");
+        c.MapGet("/categorias/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var cat = await db.Categorias.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
             return cat is null ? Results.NotFound() : Results.Ok(cat);
         }).WithSummary("Detalhes da categoria");
-        g.MapPost("/categorias", async (CategoriaDto dto, EstoqueDbContext db) =>
+        c.MapPost("/categorias", async (CategoriaDto dto, EstoqueDbContext db) =>
         {
             var cat = new Categoria { Nome = dto.Nome, Descricao = dto.Descricao };
             db.Categorias.Add(cat);
             await db.SaveChangesAsync();
             return Results.Created($"/estoque/categorias/{cat.Id}", cat);
         }).WithSummary("Cria categoria");
-        g.MapPut("/categorias/{id:long}", async (long id, CategoriaDto dto, EstoqueDbContext db) =>
+        c.MapPut("/categorias/{id:long}", async (long id, CategoriaDto dto, EstoqueDbContext db) =>
         {
             var cat = await db.Categorias.FindAsync(id);
             if (cat is null) return Results.NotFound();
@@ -162,7 +162,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(cat);
         }).WithSummary("Atualiza categoria");
-        g.MapDelete("/categorias/{id:long}", async (long id, EstoqueDbContext db) =>
+        c.MapDelete("/categorias/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var cat = await db.Categorias.FindAsync(id);
             if (cat is null) return Results.NotFound();
@@ -171,20 +171,21 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Exclui categoria");
 
-        g.MapGet("/localizacoes", async (EstoqueDbContext db) => Results.Ok(await db.Localizacoes.AsNoTracking().ToListAsync())).WithSummary("Lista localizações");
-        g.MapGet("/localizacoes/{id:long}", async (long id, EstoqueDbContext db) =>
+        var l = app.MapGroup("/estoque").WithTags("Estoque - Localizações");
+        l.MapGet("/localizacoes", async (EstoqueDbContext db) => Results.Ok(await db.Localizacoes.AsNoTracking().ToListAsync())).WithSummary("Lista localizações");
+        l.MapGet("/localizacoes/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var loc = await db.Localizacoes.AsNoTracking().FirstOrDefaultAsync(l => l.Id == id);
             return loc is null ? Results.NotFound() : Results.Ok(loc);
         }).WithSummary("Detalhes da localização");
-        g.MapPost("/localizacoes", async (LocalizacaoDto dto, EstoqueDbContext db) =>
+        l.MapPost("/localizacoes", async (LocalizacaoDto dto, EstoqueDbContext db) =>
         {
             var loc = new Localizacao { Descricao = dto.Descricao, Corredor = dto.Corredor, Prateleira = dto.Prateleira };
             db.Localizacoes.Add(loc);
             await db.SaveChangesAsync();
             return Results.Created($"/estoque/localizacoes/{loc.Id}", loc);
         }).WithSummary("Cria localização");
-        g.MapPut("/localizacoes/{id:long}", async (long id, LocalizacaoDto dto, EstoqueDbContext db) =>
+        l.MapPut("/localizacoes/{id:long}", async (long id, LocalizacaoDto dto, EstoqueDbContext db) =>
         {
             var loc = await db.Localizacoes.FindAsync(id);
             if (loc is null) return Results.NotFound();
@@ -194,7 +195,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(loc);
         }).WithSummary("Atualiza localização");
-        g.MapDelete("/localizacoes/{id:long}", async (long id, EstoqueDbContext db) =>
+        l.MapDelete("/localizacoes/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var loc = await db.Localizacoes.FindAsync(id);
             if (loc is null) return Results.NotFound();
@@ -203,7 +204,8 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Exclui localização");
 
-        g.MapPost("/movimentacoes", async (MovimentacaoCreateDto dto, EstoqueDbContext db, IValidator<MovimentacaoCreateDto> v) =>
+        var m = app.MapGroup("/estoque").WithTags("Estoque - Movimentações");
+        m.MapPost("/movimentacoes", async (MovimentacaoCreateDto dto, EstoqueDbContext db, IValidator<MovimentacaoCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
             var m = new Movimentacao{ Peca_Id=dto.PecaId, Quantidade=dto.Quantidade, Tipo=dto.Tipo, Referencia=dto.Referencia, Usuario=dto.Usuario };

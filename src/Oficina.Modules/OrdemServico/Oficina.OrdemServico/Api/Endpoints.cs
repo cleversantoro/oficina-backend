@@ -14,7 +14,6 @@ public static class Endpoints
     public static void MapOrdemServicoEndpoints(this IEndpointRouteBuilder app)
     {
         var g = app.MapGroup("/ordens").WithTags("Ordem de Serviço");
-
         g.MapGet("/", async (OrdemServicoDbContext db) =>
              Results.Ok(await db.Ordens
                 .Include(o => o.Itens)
@@ -26,7 +25,6 @@ public static class Endpoints
                 .Include(o => o.Observacoes)
                 .AsNoTracking().ToListAsync()))
              .WithSummary("Lista ordens de serviço");
-
         g.MapGet("/{id:long}", async (long id, OrdemServicoDbContext db) =>
         {
             var ordem = await db.Ordens
@@ -41,7 +39,6 @@ public static class Endpoints
                 .FirstOrDefaultAsync(o => o.Id == id);
             return ordem is null ? Results.NotFound() : Results.Ok(ordem);
         }).WithSummary("Detalhes da ordem de serviço");
-
         g.MapPost("/", async (OrdemCreateDto dto, OrdemServicoDbContext db, IValidator<OrdemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
@@ -69,7 +66,6 @@ public static class Endpoints
             };
             db.Ordens.Add(os); await db.SaveChangesAsync(); return Results.Created($"/ordens/{os.Id}", os);
         }).WithSummary("Cria OS");
-
         g.MapPut("/{id:long}", async (long id, OrdemCreateDto dto, OrdemServicoDbContext db, IValidator<OrdemCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
@@ -105,7 +101,6 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(os);
         }).WithSummary("Atualiza OS");
-
         g.MapDelete("/{id:long}", async (long id, OrdemServicoDbContext db) =>
         {
             var os = await db.Ordens.FirstOrDefaultAsync(o => o.Id == id);
@@ -116,7 +111,8 @@ public static class Endpoints
         }).WithSummary("Exclui OS");
 
         // Anexos
-        g.MapPost("/{id:long}/anexos", async (long id, OrdemServicoAnexoDto dto, OrdemServicoDbContext db) =>
+        var a = app.MapGroup("/ordens").WithTags("Ordem de Serviço - Anexos");
+        a.MapPost("/{id:long}/anexos", async (long id, OrdemServicoAnexoDto dto, OrdemServicoDbContext db) =>
         {
             var ordem = await db.Ordens.Include(o => o.Anexos).FirstOrDefaultAsync(o => o.Id == id);
             if (ordem is null) return Results.NotFound();
@@ -125,7 +121,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Created($"/ordens/{id}/anexos/{anexo.Id}", anexo);
         }).WithSummary("Adiciona anexo à OS");
-        g.MapDelete("/{id:long}/anexos/{anexoId:long}", async (long id, long anexoId, OrdemServicoDbContext db) =>
+        a.MapDelete("/{id:long}/anexos/{anexoId:long}", async (long id, long anexoId, OrdemServicoDbContext db) =>
         {
             var anexo = await db.Set<OrdemServicoAnexo>().FirstOrDefaultAsync(a => a.Ordem_Servico_Id == id && a.Id == anexoId);
             if (anexo is null) return Results.NotFound();
@@ -133,8 +129,10 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Remove anexo da OS");
+
         // Checklists
-        g.MapPost("/{id:long}/checklists", async (long id, OrdemServicoChecklistDto dto, OrdemServicoDbContext db) =>
+        var c = app.MapGroup("/ordens").WithTags("Ordem de Serviço - ChecList");
+        c.MapPost("/{id:long}/checklists", async (long id, OrdemServicoChecklistDto dto, OrdemServicoDbContext db) =>
         {
             var ordem = await db.Ordens.Include(o => o.Checklists).FirstOrDefaultAsync(o => o.Id == id);
             if (ordem is null) return Results.NotFound();
@@ -143,7 +141,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Created($"/ordens/{id}/checklists/{checklist.Id}", checklist);
         }).WithSummary("Adiciona checklist à OS");
-        g.MapDelete("/{id:long}/checklists/{checklistId:long}", async (long id, long checklistId, OrdemServicoDbContext db) =>
+        c.MapDelete("/{id:long}/checklists/{checklistId:long}", async (long id, long checklistId, OrdemServicoDbContext db) =>
         {
             var checklist = await db.Set<OrdemServicoChecklist>().FirstOrDefaultAsync(c => c.Ordem_Servico_Id == id && c.Id == checklistId);
             if (checklist is null) return Results.NotFound();
@@ -151,8 +149,10 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Remove checklist da OS");
+
         // Avaliações
-        g.MapPost("/{id:long}/avaliacoes", async (long id, OrdemServicoAvaliacaoDto dto, OrdemServicoDbContext db) =>
+        var av = app.MapGroup("/ordens").WithTags("Ordem de Serviço - Avaliações");
+        av.MapPost("/{id:long}/avaliacoes", async (long id, OrdemServicoAvaliacaoDto dto, OrdemServicoDbContext db) =>
         {
             var ordem = await db.Ordens.Include(o => o.Avaliacoes).FirstOrDefaultAsync(o => o.Id == id);
             if (ordem is null) return Results.NotFound();
@@ -161,7 +161,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Created($"/ordens/{id}/avaliacoes/{avaliacao.Id}", avaliacao);
         }).WithSummary("Adiciona avaliação à OS");
-        g.MapDelete("/{id:long}/avaliacoes/{avaliacaoId:long}", async (long id, long avaliacaoId, OrdemServicoDbContext db) =>
+        av.MapDelete("/{id:long}/avaliacoes/{avaliacaoId:long}", async (long id, long avaliacaoId, OrdemServicoDbContext db) =>
         {
             var avaliacao = await db.Set<OrdemServicoAvaliacao>().FirstOrDefaultAsync(a => a.Ordem_Servico_Id == id && a.Id == avaliacaoId);
             if (avaliacao is null) return Results.NotFound();
@@ -169,8 +169,10 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Remove avaliação da OS");
+
         // Pagamentos
-        g.MapPost("/{id:long}/pagamentos", async (long id, OrdemServicoPagamentoDto dto, OrdemServicoDbContext db) =>
+        var p = app.MapGroup("/ordens").WithTags("Ordem de Serviço - Pagamentos");
+        p.MapPost("/{id:long}/pagamentos", async (long id, OrdemServicoPagamentoDto dto, OrdemServicoDbContext db) =>
         {
             var ordem = await db.Ordens.Include(o => o.Pagamentos).FirstOrDefaultAsync(o => o.Id == id);
             if (ordem is null) return Results.NotFound();
@@ -179,7 +181,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Created($"/ordens/{id}/pagamentos/{pagamento.Id}", pagamento);
         }).WithSummary("Adiciona pagamento à OS");
-        g.MapDelete("/{id:long}/pagamentos/{pagamentoId:long}", async (long id, long pagamentoId, OrdemServicoDbContext db) =>
+        p.MapDelete("/{id:long}/pagamentos/{pagamentoId:long}", async (long id, long pagamentoId, OrdemServicoDbContext db) =>
         {
             var pagamento = await db.Set<OrdemServicoPagamento>().FirstOrDefaultAsync(p => p.Ordem_Servico_Id == id && p.Id == pagamentoId);
             if (pagamento is null) return Results.NotFound();
@@ -187,8 +189,10 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Remove pagamento da OS");
+
         // Observações
-        g.MapPost("/{id:long}/observacoes", async (long id, OrdemServicoObservacaoDto dto, OrdemServicoDbContext db) =>
+        var o = app.MapGroup("/ordens").WithTags("Ordem de Serviço - Observações");
+        o.MapPost("/{id:long}/observacoes", async (long id, OrdemServicoObservacaoDto dto, OrdemServicoDbContext db) =>
         {
             var ordem = await db.Ordens.Include(o => o.Observacoes).FirstOrDefaultAsync(o => o.Id == id);
             if (ordem is null) return Results.NotFound();
@@ -197,7 +201,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Created($"/ordens/{id}/observacoes/{obs.Id}", obs);
         }).WithSummary("Adiciona observação à OS");
-        g.MapDelete("/{id:long}/observacoes/{obsId:long}", async (long id, long obsId, OrdemServicoDbContext db) =>
+        o.MapDelete("/{id:long}/observacoes/{obsId:long}", async (long id, long obsId, OrdemServicoDbContext db) =>
         {
             var obs = await db.Set<OrdemServicoObservacao>().FirstOrDefaultAsync(o => o.Ordem_Servico_Id == id && o.Id == obsId);
             if (obs is null) return Results.NotFound();

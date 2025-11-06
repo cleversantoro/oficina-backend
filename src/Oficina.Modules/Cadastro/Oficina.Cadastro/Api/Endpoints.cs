@@ -17,7 +17,7 @@ public static class Endpoints
 {
     public static void MapCadastroEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/cadastro").WithTags("Clientes");
+        var g = app.MapGroup("/cadastro").WithTags("Cadastro - Clientes");
 
         //Clientes
         g.MapGet("/clientes", async ([AsParameters] ClienteFiltroDto filtro, CadastroDbContext db) =>
@@ -134,7 +134,7 @@ public static class Endpoints
         }).WithSummary("Exclui cliente");
 
         //mecanicos
-        var m = app.MapGroup("/cadastro").WithTags("Mecânicos");
+        var m = app.MapGroup("/cadastro").WithTags("Cadastro - Mecânicos");
 
         m.MapGet("/mecanicos", async (CadastroDbContext db) =>
         {
@@ -370,7 +370,7 @@ public static class Endpoints
         }).WithSummary("Exclui mecânico");
 
         //Fornecedores
-        var f = app.MapGroup("/cadastro").WithTags("Fornecedores");
+        var f = app.MapGroup("/cadastro").WithTags("Cadastro - Fornecedores");
         
         f.MapGet("/fornecedores", async (CadastroDbContext db) => Results.Ok(await db.Fornecedores.AsNoTracking().ToListAsync())).WithSummary("Lista fornecedores");
 
