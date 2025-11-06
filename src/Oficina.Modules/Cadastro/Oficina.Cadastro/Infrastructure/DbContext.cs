@@ -7,6 +7,7 @@ public class CadastroDbContext : DbContext
 {
     public CadastroDbContext(DbContextOptions<CadastroDbContext> options) : base(options) { }
 
+    #region Cliente
     public DbSet<Cliente> Clientes => Set<Cliente>();
     public DbSet<ClienteOrigem> ClienteOrigens => Set<ClienteOrigem>();
     public DbSet<ClienteEndereco> ClienteEnderecos => Set<ClienteEndereco>();
@@ -14,9 +15,18 @@ public class CadastroDbContext : DbContext
     public DbSet<ClienteIndicacao> ClienteIndicacoes => Set<ClienteIndicacao>();
     public DbSet<ClienteConsentimento> ClienteConsentimentos => Set<ClienteConsentimento>();
     public DbSet<ClienteFinanceiro> ClienteFinanceiro => Set<ClienteFinanceiro>();
+    public DbSet<ClienteAnexo> ClienteAnexos => Set<ClienteAnexo>();
+    public DbSet<ClientePessoaFisica> ClientesPessoaFisica => Set<ClientePessoaFisica>();
+    public DbSet<ClientePessoaJuridica> ClientesPessoaJuridica => Set<ClientePessoaJuridica>();
+    #endregion
+
+    #region Veiculo
     public DbSet<VeiculoMarca> VeiculoMarcas => Set<VeiculoMarca>();
     public DbSet<VeiculoModelo> VeiculoModelos => Set<VeiculoModelo>();
-    public DbSet<ClienteAnexo> ClienteAnexos => Set<ClienteAnexo>();
+    public DbSet<ClienteVeiculo> ClientesVeiculos => Set<ClienteVeiculo>();
+    #endregion
+
+    #region Mecanico
     public DbSet<Mecanico> Mecanicos => Set<Mecanico>();
     public DbSet<MecanicoEspecialidade> MecanicoEspecialidades => Set<MecanicoEspecialidade>();
     public DbSet<MecanicoEspecialidadeRel> MecanicoEspecialidadesRel => Set<MecanicoEspecialidadeRel>();
@@ -26,14 +36,15 @@ public class CadastroDbContext : DbContext
     public DbSet<MecanicoCertificacao> MecanicoCertificacoes => Set<MecanicoCertificacao>();
     public DbSet<MecanicoDisponibilidade> MecanicoDisponibilidades => Set<MecanicoDisponibilidade>();
     public DbSet<MecanicoExperiencia> MecanicoExperiencias => Set<MecanicoExperiencia>();
-    public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
-    public DbSet<ClientePessoaFisica> ClientesPessoaFisica => Set<ClientePessoaFisica>();
-    public DbSet<ClientePessoaJuridica> ClientesPessoaJuridica => Set<ClientePessoaJuridica>();
-    public DbSet<ClienteVeiculo> ClientesVeiculos => Set<ClienteVeiculo>();
+    #endregion
 
+    #region Fornecedor
+    public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+    #endregion
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        #region Cliente
         modelBuilder.Entity<Cliente>(entity =>
         {
             entity.ToTable("cad_clientes");
@@ -148,6 +159,32 @@ public class CadastroDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
         });
 
+        modelBuilder.Entity<ClienteAnexo>(entity =>
+        {
+            entity.ToTable("cad_clientes_anexos");
+            entity.Property(p => p.Nome).HasMaxLength(200).IsRequired();
+            entity.Property(p => p.Tipo).HasMaxLength(100).IsRequired();
+            entity.Property(p => p.Url).HasMaxLength(500).IsRequired();
+            entity.Property(p => p.Observacao).HasMaxLength(240);
+            entity.HasIndex(p => new { p.Cliente_Id, p.Nome }).IsUnique();
+        });
+        #endregion
+
+        #region Veiculo
+        modelBuilder.Entity<ClienteVeiculo>(entity =>
+        {
+            entity.ToTable("cad_veiculos");
+            entity.Property(p => p.Placa).HasMaxLength(10).IsRequired();
+            entity.Property(p => p.Cor).HasMaxLength(40);
+            entity.Property(p => p.Renavam).HasMaxLength(20);
+            entity.Property(p => p.Chassi).HasMaxLength(40);
+            entity.Property(p => p.Combustivel).HasMaxLength(40);
+            entity.Property(p => p.Observacao).HasMaxLength(240);
+            entity.HasIndex(p => p.Placa).IsUnique();
+            entity.HasIndex(p => p.Renavam).IsUnique().HasFilter("Renavam IS NOT NULL");
+            entity.HasOne(p => p.Modelo).WithMany(m => m.Veiculos).HasForeignKey(p => p.Modelo_Id).OnDelete(DeleteBehavior.Restrict).IsRequired(false);
+        });
+
         modelBuilder.Entity<VeiculoMarca>(entity =>
         {
             entity.ToTable("cad_veiculos_marcas");
@@ -163,31 +200,9 @@ public class CadastroDbContext : DbContext
             entity.HasIndex(p => new { p.Marca_Id, p.Nome }).IsUnique();
             entity.HasOne(p => p.Marca).WithMany(m => m.Modelos).HasForeignKey(p => p.Marca_Id).OnDelete(DeleteBehavior.Cascade);
         });
+        #endregion
 
-        modelBuilder.Entity<ClienteVeiculo>(entity =>
-        {
-            entity.ToTable("cad_veiculos");
-            entity.Property(p => p.Placa).HasMaxLength(10).IsRequired();
-            entity.Property(p => p.Cor).HasMaxLength(40);
-            entity.Property(p => p.Renavam).HasMaxLength(20);
-            entity.Property(p => p.Chassi).HasMaxLength(40);
-            entity.Property(p => p.Combustivel).HasMaxLength(40);
-            entity.Property(p => p.Observacao).HasMaxLength(240);
-            entity.HasIndex(p => p.Placa).IsUnique();
-            entity.HasIndex(p => p.Renavam).IsUnique().HasFilter("Renavam IS NOT NULL");
-            entity.HasOne(p => p.Modelo).WithMany(m => m.Veiculos).HasForeignKey(p => p.Modelo_Id).OnDelete(DeleteBehavior.Restrict).IsRequired(false);
-        });
-
-        modelBuilder.Entity<ClienteAnexo>(entity =>
-        {
-            entity.ToTable("cad_clientes_anexos");
-            entity.Property(p => p.Nome).HasMaxLength(200).IsRequired();
-            entity.Property(p => p.Tipo).HasMaxLength(100).IsRequired();
-            entity.Property(p => p.Url).HasMaxLength(500).IsRequired();
-            entity.Property(p => p.Observacao).HasMaxLength(240);
-            entity.HasIndex(p => new { p.Cliente_Id, p.Nome }).IsUnique();
-        });
-
+        #region Mecanico
         modelBuilder.Entity<Mecanico>(entity =>
         {
             entity.ToTable("cad_mecanicos");
@@ -335,7 +350,9 @@ public class CadastroDbContext : DbContext
             entity.HasIndex(p => new { p.Mecanico_Id, p.Empresa, p.Cargo }).IsUnique();
             entity.HasOne(p => p.Mecanico).WithMany(m => m.Experiencias).HasForeignKey(p => p.Mecanico_Id).OnDelete(DeleteBehavior.Cascade);
         });
+        #endregion
 
+        #region Fornecedor
         modelBuilder.Entity<Fornecedor>(entity =>
         {
             entity.ToTable("cad_fornecedor");
@@ -426,6 +443,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Valor_Antigo).HasColumnType("text");
             entity.Property(p => p.Valor_Novo).HasColumnType("text");
         });
+        #endregion
     }
 }
 
