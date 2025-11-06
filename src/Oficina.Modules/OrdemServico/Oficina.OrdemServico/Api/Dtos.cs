@@ -13,6 +13,6 @@ public record OrdemCreateDto(
  IReadOnlyCollection<OrdemServicoAnexoDto>? Anexos,
  IReadOnlyCollection<OrdemServicoChecklistDto>? Checklists
 );
-public record ItemServicoDto(long? PecaId, string Descricao, int Quantidade, decimal ValorUnitario);
+public record ItemServicoDto(long? Peca_Id, string Descricao, int Quantidade, decimal ValorUnitario);
 
 

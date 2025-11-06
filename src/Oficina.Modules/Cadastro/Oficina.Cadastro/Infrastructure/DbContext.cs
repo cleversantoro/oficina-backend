@@ -43,42 +43,17 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Telefone).HasMaxLength(20);
             entity.Property(p => p.Email).HasMaxLength(160);
             entity.HasIndex(p => p.Documento).IsUnique();
-            entity.HasOne(p => p.Origem)
-                .WithMany(o => o.Clientes)
-                .HasForeignKey(p => p.Origem_Id)
-                .OnDelete(DeleteBehavior.SetNull);
-            entity.HasMany(p => p.Enderecos)
-                .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Contatos)
-                .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Indicacoes)
-                .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
-                .OnDelete(DeleteBehavior.Cascade);            
-            entity.HasMany(p => p.Veiculos)
-                .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(p => p.PessoaFisica)
-                .WithOne()
-                .HasForeignKey<ClientePessoaFisica>(pf => pf.Cliente_Id)
-                .HasPrincipalKey<Cliente>(c => c.Id)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);
-            entity.HasOne(p => p.PessoaJuridica)
-                .WithOne()
-                .HasForeignKey<ClientePessoaJuridica>(pj => pj.Cliente_Id)
-                .HasPrincipalKey<Cliente>(c => c.Id)
-                .OnDelete(DeleteBehavior.Cascade)
-                .IsRequired(false);           
-            entity.HasMany(p => p.Anexos)
-                .WithOne(e => e.Cliente)
-                .HasForeignKey(e => e.Cliente_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.Origem).WithMany(o => o.Clientes).HasForeignKey(p => p.Origem_Id).OnDelete(DeleteBehavior.SetNull);
+            entity.HasMany(p => p.Enderecos).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Contatos).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Indicacoes).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Veiculos).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(p => p.PessoaFisica).WithOne().HasForeignKey<ClientePessoaFisica>(pf => pf.Cliente_Id).HasPrincipalKey<Cliente>(c => c.Id).OnDelete(DeleteBehavior.Cascade).IsRequired(false);
+            entity.HasOne(p => p.PessoaJuridica).WithOne().HasForeignKey<ClientePessoaJuridica>(pj => pj.Cliente_Id).HasPrincipalKey<Cliente>(c => c.Id).OnDelete(DeleteBehavior.Cascade).IsRequired(false);
+
+            entity.HasMany(p => p.Anexos).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ClienteOrigem>(entity =>
@@ -186,10 +161,7 @@ public class CadastroDbContext : DbContext
             entity.ToTable("cad_veiculos_modelos");
             entity.Property(p => p.Nome).HasMaxLength(160).IsRequired();
             entity.HasIndex(p => new { p.Marca_Id, p.Nome }).IsUnique();
-            entity.HasOne(p => p.Marca)
-                .WithMany(m => m.Modelos)
-                .HasForeignKey(p => p.Marca_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(p => p.Marca).WithMany(m => m.Modelos).HasForeignKey(p => p.Marca_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ClienteVeiculo>(entity =>
@@ -203,11 +175,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Observacao).HasMaxLength(240);
             entity.HasIndex(p => p.Placa).IsUnique();
             entity.HasIndex(p => p.Renavam).IsUnique().HasFilter("Renavam IS NOT NULL");
-            entity.HasOne(p => p.Modelo)
-                .WithMany(m => m.Veiculos)
-                .HasForeignKey(p => p.Modelo_Id)
-                .OnDelete(DeleteBehavior.Restrict)
-                .IsRequired(false);
+            entity.HasOne(p => p.Modelo).WithMany(m => m.Veiculos).HasForeignKey(p => p.Modelo_Id).OnDelete(DeleteBehavior.Restrict).IsRequired(false);
         });
 
         modelBuilder.Entity<ClienteAnexo>(entity =>
@@ -259,14 +227,8 @@ public class CadastroDbContext : DbContext
                 .WithOne(c => c.Mecanico)
                 .HasForeignKey(c => c.Mecanico_Id)
                 .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Disponibilidades)
-                .WithOne(d => d.Mecanico)
-                .HasForeignKey(d => d.Mecanico_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Experiencias)
-                .WithOne(e => e.Mecanico)
-                .HasForeignKey(e => e.Mecanico_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Disponibilidades).WithOne(d => d.Mecanico).HasForeignKey(d => d.Mecanico_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Experiencias).WithOne(e => e.Mecanico).HasForeignKey(e => e.Mecanico_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<MecanicoEspecialidade>(entity =>
@@ -350,14 +312,8 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Codigo_Certificacao).HasMaxLength(60);
             entity.HasIndex(p => new { p.Mecanico_Id, p.Titulo }).IsUnique();
             entity.HasIndex(p => p.Especialidade_Id);
-            entity.HasOne(p => p.Mecanico)
-                .WithMany(m => m.Certificacoes)
-                .HasForeignKey(p => p.Mecanico_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasOne(p => p.Especialidade)
-                .WithMany(e => e.Certificacoes)
-                .HasForeignKey(p => p.Especialidade_Id)
-                .OnDelete(DeleteBehavior.SetNull);
+            entity.HasOne(p => p.Mecanico).WithMany(m => m.Certificacoes).HasForeignKey(p => p.Mecanico_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(p => p.Especialidade).WithMany(e => e.Certificacoes).HasForeignKey(p => p.Especialidade_Id).OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<MecanicoDisponibilidade>(entity =>
@@ -367,10 +323,7 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Hora_Inicio).HasColumnType("time");
             entity.Property(p => p.Hora_Fim).HasColumnType("time");
             entity.HasIndex(p => new { p.Mecanico_Id, p.Dia_Semana, p.Hora_Inicio, p.Hora_Fim }).IsUnique();
-            entity.HasOne(p => p.Mecanico)
-                .WithMany(m => m.Disponibilidades)
-                .HasForeignKey(p => p.Mecanico_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(p => p.Mecanico).WithMany(m => m.Disponibilidades).HasForeignKey(p => p.Mecanico_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<MecanicoExperiencia>(entity =>
@@ -380,15 +333,12 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Cargo).HasMaxLength(120).IsRequired();
             entity.Property(p => p.Resumo_Atividades).HasMaxLength(400);
             entity.HasIndex(p => new { p.Mecanico_Id, p.Empresa, p.Cargo }).IsUnique();
-            entity.HasOne(p => p.Mecanico)
-                .WithMany(m => m.Experiencias)
-                .HasForeignKey(p => p.Mecanico_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(p => p.Mecanico).WithMany(m => m.Experiencias).HasForeignKey(p => p.Mecanico_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Fornecedor>(entity =>
         {
-            entity.ToTable("cad_fornecedores");
+            entity.ToTable("cad_fornecedor");
             entity.Property(p => p.Razao_Social).HasMaxLength(200).IsRequired();
             entity.Property(p => p.Nome_Fantasia).HasMaxLength(200);
             entity.Property(p => p.Cnpj).HasMaxLength(20).IsRequired();

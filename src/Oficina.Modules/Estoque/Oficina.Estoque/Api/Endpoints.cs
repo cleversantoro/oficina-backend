@@ -208,9 +208,9 @@ public static class Endpoints
         m.MapPost("/movimentacoes", async (MovimentacaoCreateDto dto, EstoqueDbContext db, IValidator<MovimentacaoCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            var m = new Movimentacao{ Peca_Id=dto.PecaId, Quantidade=dto.Quantidade, Tipo=dto.Tipo, Referencia=dto.Referencia, Usuario=dto.Usuario };
+            var m = new Movimentacao{ Peca_Id=dto.Peca_Id, Quantidade=dto.Quantidade, Tipo=dto.Tipo, Referencia=dto.Referencia, Usuario=dto.Usuario };
             db.Movimentacoes.Add(m);
-            var peca = await db.Pecas.FindAsync(dto.PecaId);
+            var peca = await db.Pecas.FindAsync(dto.Peca_Id);
             if (peca is null) return Results.BadRequest("Peça não encontrada");
             if (dto.Tipo.ToUpper() == "ENTRADA") peca.Quantidade += dto.Quantidade;
             else if (dto.Tipo.ToUpper() == "SAIDA") peca.Quantidade -= dto.Quantidade;

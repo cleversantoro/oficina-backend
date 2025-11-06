@@ -21,6 +21,6 @@ public record PecaCreateDto(
  IReadOnlyCollection<PecaFornecedorDto>? Fornecedores,
  IReadOnlyCollection<PecaAnexoDto>? Anexos
 );
-public record MovimentacaoCreateDto(long PecaId, int Quantidade, string Tipo, string? Referencia, string? Usuario);
+public record MovimentacaoCreateDto(long Peca_Id, int Quantidade, string Tipo, string? Referencia, string? Usuario);
 
 

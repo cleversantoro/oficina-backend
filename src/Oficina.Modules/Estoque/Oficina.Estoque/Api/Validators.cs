@@ -14,7 +14,7 @@ public class MovimentacaoCreateValidator : AbstractValidator<MovimentacaoCreateD
 {
     public MovimentacaoCreateValidator()
     {
-        RuleFor(x=>x.PecaId).NotEmpty();
+        RuleFor(x=>x.Peca_Id).NotEmpty();
         RuleFor(x=>x.Quantidade).GreaterThan(0);
         RuleFor(x=>x.Tipo).Must(t=>new[]{"ENTRADA","SAIDA"}.Contains(t.ToUpper())).WithMessage("Tipo deve ser ENTRADA ou SAIDA");
     }

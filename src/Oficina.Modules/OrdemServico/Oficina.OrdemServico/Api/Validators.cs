@@ -16,7 +16,7 @@ public class ItemCreateValidator : AbstractValidator<ItemServicoDto>
         RuleFor(x=>x.Descricao).NotEmpty();
         RuleFor(x=>x.Quantidade).GreaterThan(0);
         RuleFor(x=>x.ValorUnitario).GreaterThanOrEqualTo(0);
-        RuleFor(x=>x.PecaId).GreaterThan(0).When(x=>x.PecaId.HasValue);
+        RuleFor(x=>x.Peca_Id).GreaterThan(0).When(x=>x.Peca_Id.HasValue);
     }
 }
 

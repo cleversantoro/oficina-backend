@@ -47,7 +47,7 @@ public static class Endpoints
                 Mecanico_Id = dto.MecanicoId,
                 Descricao_Problema = dto.DescricaoProblema,
                 Itens = dto.Itens?.Select(i => new ItemServico{
-                    Peca_Id = i.PecaId,
+                    Peca_Id = i.Peca_Id,
                     Descricao = i.Descricao,
                     Quantidade = i.Quantidade,
                     Valor_Unitario = i.ValorUnitario
@@ -82,7 +82,7 @@ public static class Endpoints
             db.Set<OrdemServicoAnexo>().RemoveRange(os.Anexos);
             db.Set<OrdemServicoChecklist>().RemoveRange(os.Checklists);
             os.Itens = dto.Itens?.Select(i => new ItemServico{
-                Peca_Id = i.PecaId,
+                Peca_Id = i.Peca_Id,
                 Descricao = i.Descricao,
                 Quantidade = i.Quantidade,
                 Valor_Unitario = i.ValorUnitario
