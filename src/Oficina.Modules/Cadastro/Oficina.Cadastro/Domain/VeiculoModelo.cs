@@ -11,6 +11,6 @@ public class VeiculoModelo : Entity
     public string Nome { get; set; } = default!;
     public int? Ano_Inicio { get; set; }
     public int? Ano_Fim { get; set; }
-    public ICollection<ClienteVeiculo> Veiculos { get; set; } = new List<ClienteVeiculo>();
+    public ICollection<VeiculoCliente> Veiculos { get; set; } = new List<VeiculoCliente>();
 }
 

@@ -680,8 +680,8 @@ public static class Endpoints
             cliente.Consentimento = null;
         }
 
-        db.ClientesVeiculos.RemoveRange(cliente.Veiculos);
-        cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
+        db.VeiculosClientes.RemoveRange(cliente.Veiculos);
+        cliente.Veiculos = dto.Veiculos?.Select(v => new VeiculoCliente
         {
             Cliente_Id = cliente.Id,
             Placa = v.Placa,
@@ -691,7 +691,7 @@ public static class Endpoints
             Cor = v.Cor,
             Chassi = v.Chassi,
             Principal = v.Principal
-        }).ToList() ?? new List<ClienteVeiculo>();
+        }).ToList() ?? new List<VeiculoCliente>();
 
         db.ClienteAnexos.RemoveRange(cliente.Anexos);
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
@@ -925,7 +925,7 @@ public static class Endpoints
             };
         }
 
-        cliente.Veiculos = dto.Veiculos?.Select(v => new ClienteVeiculo
+        cliente.Veiculos = dto.Veiculos?.Select(v => new VeiculoCliente
         {
             Cliente_Id = cliente.Id,
             Placa = v.Placa,
@@ -935,7 +935,7 @@ public static class Endpoints
             Cor = v.Cor,
             Chassi = v.Chassi,
             Principal = v.Principal
-        }).ToList() ?? new List<ClienteVeiculo>();
+        }).ToList() ?? new List<VeiculoCliente>();
 
         cliente.Anexos = dto.Anexos?.Select(a => new ClienteAnexo
         {

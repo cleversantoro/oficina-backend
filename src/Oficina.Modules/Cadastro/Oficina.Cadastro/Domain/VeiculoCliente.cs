@@ -2,7 +2,7 @@
 
 namespace Oficina.Cadastro.Domain;
 
-public class ClienteVeiculo : Entity
+public class VeiculoCliente : Entity
 {
     public long Cliente_Id { get; set; }
     public Cliente Cliente { get; set; } = default!;

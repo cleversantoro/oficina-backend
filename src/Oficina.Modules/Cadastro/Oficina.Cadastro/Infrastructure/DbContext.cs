@@ -23,7 +23,7 @@ public class CadastroDbContext : DbContext
     #region Veiculo
     public DbSet<VeiculoMarca> VeiculoMarcas => Set<VeiculoMarca>();
     public DbSet<VeiculoModelo> VeiculoModelos => Set<VeiculoModelo>();
-    public DbSet<ClienteVeiculo> ClientesVeiculos => Set<ClienteVeiculo>();
+    public DbSet<VeiculoCliente> VeiculosClientes => Set<VeiculoCliente>();
     #endregion
 
     #region Mecanico
@@ -171,7 +171,7 @@ public class CadastroDbContext : DbContext
         #endregion
 
         #region Veiculo
-        modelBuilder.Entity<ClienteVeiculo>(entity =>
+        modelBuilder.Entity<VeiculoCliente>(entity =>
         {
             entity.ToTable("cad_veiculos");
             entity.Property(p => p.Placa).HasMaxLength(10).IsRequired();
