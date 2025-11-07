@@ -3,7 +3,7 @@ namespace Oficina.Estoque.Domain;
 public class PecaHistorico : Entity
 {
     public long Peca_Id { get; set; }
-    public Peca? Peca { get; set; }
+    public Peca Peca { get; set; } = default!;
     public DateTime Data_Alteracao { get; set; } = DateTime.UtcNow;
     public string Usuario { get; set; } = default!;
     public string Campo { get; set; } = default!;

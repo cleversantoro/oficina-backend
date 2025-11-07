@@ -1,11 +1,15 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Oficina.Estoque.Infrastructure;
-using Oficina.Estoque.Domain;
-using Oficina.Estoque.Api;
-using FluentValidation;
-using Microsoft.AspNetCore.Routing;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Oficina.Cadastro.Api;
+using Oficina.Cadastro.Domain;
+using Oficina.Cadastro.Infrastructure;
+using Oficina.Estoque.Api;
+using Oficina.Estoque.Domain;
+using Oficina.Estoque.Infrastructure;
+using Oficina.SharedKernel.Domain;
 
 namespace Oficina.Estoque;
 
@@ -16,12 +20,17 @@ public static class Endpoints
         var g = app.MapGroup("/estoque").WithTags("Estoque - Peças");
 
         g.MapGet("/pecas", async (EstoqueDbContext db) =>
-            Results.Ok(await db.Pecas
-                .Include(p => p.Fornecedores)
-                .Include(p => p.Anexos)
-                .Include(p => p.Historicos)
-                .AsNoTracking().ToListAsync()))
-            .WithSummary("Lista peças");
+        {
+            var pecas = await db.Pecas
+                .Include(f => f.Fornecedores)
+                .Include(f => f.Anexos)
+                .Include(f => f.Historicos)
+                .AsNoTracking()
+                .ToListAsync();
+            var result = pecas.Select(MapToPecasDetalhesDto).ToList();
+            return Results.Ok(result);
+        }).WithSummary("Lista Pecas");
+
         g.MapGet("/pecas/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var peca = await db.Pecas
@@ -32,9 +41,12 @@ public static class Endpoints
                 .FirstOrDefaultAsync(p => p.Id == id);
             return peca is null ? Results.NotFound() : Results.Ok(peca);
         }).WithSummary("Detalhes da peça");
-        g.MapPost("/pecas", async (PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) => {
-            var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            var p = new Peca{
+
+        g.MapPost("/pecas", async (PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) =>
+        {
+            var vr = await v.ValidateAsync(dto); if (!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
+            var p = new Peca
+            {
                 Codigo = dto.Codigo,
                 Descricao = dto.Descricao,
                 Preco_Unitario = dto.PrecoUnitario,
@@ -47,13 +59,15 @@ public static class Endpoints
                 Fabricante_Id = dto.FabricanteId,
                 Categoria_Id = dto.CategoriaId,
                 Localizacao_Id = dto.LocalizacaoId,
-                Fornecedores = dto.Fornecedores?.Select(f => new PecaFornecedor {
+                Fornecedores = dto.Fornecedores?.Select(f => new PecaFornecedor
+                {
                     Fornecedor_Id = f.FornecedorId,
                     Preco = f.Preco,
                     Prazo_Entrega = f.PrazoEntrega,
                     Observacao = f.Observacao
                 }).ToList() ?? new List<PecaFornecedor>(),
-                Anexos = dto.Anexos?.Select(a => new PecaAnexo {
+                Anexos = dto.Anexos?.Select(a => new PecaAnexo
+                {
                     Nome = a.Nome,
                     Tipo = a.Tipo,
                     Url = a.Url,
@@ -62,8 +76,10 @@ public static class Endpoints
             };
             db.Pecas.Add(p); await db.SaveChangesAsync(); return Results.Created($"/estoque/pecas/{p.Id}", p);
         }).WithSummary("Cria peça");
-        g.MapPut("/pecas/{id:long}", async (long id, PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) => {
-            var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
+
+        g.MapPut("/pecas/{id:long}", async (long id, PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) =>
+        {
+            var vr = await v.ValidateAsync(dto); if (!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
             var peca = await db.Pecas
                 .Include(p => p.Fornecedores)
                 .Include(p => p.Anexos)
@@ -83,13 +99,15 @@ public static class Endpoints
             peca.Localizacao_Id = dto.LocalizacaoId;
             db.PecasFornecedores.RemoveRange(peca.Fornecedores);
             db.PecasAnexos.RemoveRange(peca.Anexos);
-            peca.Fornecedores = dto.Fornecedores?.Select(f => new PecaFornecedor {
+            peca.Fornecedores = dto.Fornecedores?.Select(f => new PecaFornecedor
+            {
                 Fornecedor_Id = f.FornecedorId,
                 Preco = f.Preco,
                 Prazo_Entrega = f.PrazoEntrega,
                 Observacao = f.Observacao
             }).ToList() ?? new List<PecaFornecedor>();
-            peca.Anexos = dto.Anexos?.Select(a => new PecaAnexo {
+            peca.Anexos = dto.Anexos?.Select(a => new PecaAnexo
+            {
                 Nome = a.Nome,
                 Tipo = a.Tipo,
                 Url = a.Url,
@@ -98,7 +116,9 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(peca);
         }).WithSummary("Atualiza peça");
-        g.MapDelete("/pecas/{id:long}", async (long id, EstoqueDbContext db) => {
+
+        g.MapDelete("/pecas/{id:long}", async (long id, EstoqueDbContext db) =>
+        {
             var peca = await db.Pecas.FirstOrDefaultAsync(p => p.Id == id);
             if (peca is null) return Results.NotFound();
             db.Pecas.Remove(peca);
@@ -207,8 +227,8 @@ public static class Endpoints
         var m = app.MapGroup("/estoque").WithTags("Estoque - Movimentações");
         m.MapPost("/movimentacoes", async (MovimentacaoCreateDto dto, EstoqueDbContext db, IValidator<MovimentacaoCreateDto> v) =>
         {
-            var vr = await v.ValidateAsync(dto); if(!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
-            var m = new Movimentacao{ Peca_Id=dto.Peca_Id, Quantidade=dto.Quantidade, Tipo=dto.Tipo, Referencia=dto.Referencia, Usuario=dto.Usuario };
+            var vr = await v.ValidateAsync(dto); if (!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
+            var m = new Movimentacao { Peca_Id = dto.Peca_Id, Quantidade = dto.Quantidade, Tipo = dto.Tipo, Referencia = dto.Referencia, Usuario = dto.Usuario };
             db.Movimentacoes.Add(m);
             var peca = await db.Pecas.FindAsync(dto.Peca_Id);
             if (peca is null) return Results.BadRequest("Peça não encontrada");
@@ -218,6 +238,47 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Created($"/estoque/movimentacoes/{m.Id}", m);
         }).WithSummary("Lança movimentação de estoque");
+    }
+
+    private static PecaCreateDto MapToPecasDetalhesDto(Peca peca)
+    {
+        return new PecaCreateDto(
+            peca.Id,
+            peca.Codigo,
+            peca.Descricao,
+            peca.Preco_Unitario,
+            peca.Quantidade,
+            peca.Estoque_Minimo,
+            peca.Estoque_Maximo,
+            peca.Unidade,
+            peca.Status,
+            peca.Observacoes,
+            peca.Fabricante_Id,
+            peca.Categoria_Id,
+            peca.Localizacao_Id,
+            peca.Fornecedores.Select(e => new PecaFornecedorDto(
+                e.Fornecedor_Id, 
+                e.Peca_Id,
+                e.Preco, 
+                e.Prazo_Entrega, 
+                e.Observacao
+            )).ToList(),
+            peca.Anexos.Select(a => new PecaAnexoDto(
+                a.Peca_Id,
+                a.Nome,
+                a.Tipo,
+                a.Url,
+                a.Observacao
+            )).ToList(),
+            peca.Historicos.Select(h => new PecaHistoricoDto(
+                h.Peca_Id,
+                h.Data_Alteracao,
+                h.Usuario,
+                h.Campo,
+                h.Valor_Antigo,
+                h.Valor_Novo
+            )).ToList()
+        );
     }
 }
 

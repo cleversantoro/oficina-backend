@@ -38,6 +38,12 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(o => { o.SwaggerDoc("v1", new() { Title = "Oficina API", Version = "v1" }); });
 builder.Services.AddCors(opt => opt.AddPolicy("default", p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
 
+// Corrige redundância cíclica na serialização JSON
+//builder.Services.Configure<Microsoft.AspNetCore.Http.Json.JsonOptions>(options =>
+//{
+// options.SerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+//});
+
 var app = builder.Build();
 app.UseCors("default");
 app.UseSwagger();
@@ -51,4 +57,5 @@ app.MapEstoqueEndpoints();
 app.MapFinanceiroEndpoints();
 
 app.Run();
+
 

@@ -174,3 +174,21 @@ public record FornecedorCreateDto(
  IReadOnlyCollection<FornecedorBancoDto>? Bancos
 );
 
+public record FornecedorDetalhesDto(
+ long Id,
+ string RazaoSocial,
+ string? NomeFantasia,
+ string Cnpj,
+ string? InscricaoEstadual,
+ string? Contato,
+ string? Email,
+ string? Telefone,
+ string? Observacoes,
+ string Status,
+ IReadOnlyCollection<FornecedorEnderecoDto> Enderecos,
+ IReadOnlyCollection<FornecedorContatoDto> Contatos,
+ IReadOnlyCollection<FornecedorAnexoDto> Anexos,
+ IReadOnlyCollection<FornecedorBancoDto> Bancos,
+ IReadOnlyCollection<FornecedorHistoricoDto> Historicos
+);
+

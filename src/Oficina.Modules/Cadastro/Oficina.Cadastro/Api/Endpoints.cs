@@ -372,7 +372,19 @@ public static class Endpoints
         //Fornecedores
         var f = app.MapGroup("/cadastro").WithTags("Cadastro - Fornecedores");
         
-        f.MapGet("/fornecedores", async (CadastroDbContext db) => Results.Ok(await db.Fornecedores.AsNoTracking().ToListAsync())).WithSummary("Lista fornecedores");
+        f.MapGet("/fornecedores", async (CadastroDbContext db) =>
+        {
+            var fornecedores = await db.Fornecedores
+                .Include(f => f.Enderecos)
+                .Include(f => f.Contatos)
+                .Include(f => f.Anexos)
+                .Include(f => f.Bancos)
+                .Include(f => f.Historicos)
+                .AsNoTracking()
+                .ToListAsync();
+            var result = fornecedores.Select(MapToFornecedorDetalhesDto).ToList();
+            return Results.Ok(result);
+        }).WithSummary("Lista fornecedores");
 
         f.MapPost("/fornecedores", async (FornecedorCreateDto dto, CadastroDbContext db, IValidator<FornecedorCreateDto> v) =>
         {
@@ -433,7 +445,15 @@ public static class Endpoints
             };
             db.Fornecedores.Add(fornecedor);
             await db.SaveChangesAsync();
-            return Results.Created($"/cadastro/fornecedores/{fornecedor.Id}", fornecedor);
+            var created = await db.Fornecedores
+                .Include(f => f.Enderecos)
+                .Include(f => f.Contatos)
+                .Include(f => f.Anexos)
+                .Include(f => f.Bancos)
+                .Include(f => f.Historicos)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == fornecedor.Id);
+            return Results.Created($"/cadastro/fornecedores/{fornecedor.Id}", MapToFornecedorDetalhesDto(created!));
         }).WithSummary("Cria fornecedor");
 
         f.MapGet("/fornecedores/{id:long}", async (long id, CadastroDbContext db) =>
@@ -446,7 +466,7 @@ public static class Endpoints
                 .Include(f => f.Historicos)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(f => f.Id == id);
-            return fornecedor is null ? Results.NotFound() : Results.Ok(fornecedor);
+            return fornecedor is null ? Results.NotFound() : Results.Ok(MapToFornecedorDetalhesDto(fornecedor));
         }).WithSummary("Obtém fornecedor por ID");
 
         f.MapPut("/fornecedores/{id:long}", async (long id, FornecedorCreateDto dto, CadastroDbContext db, IValidator<FornecedorCreateDto> v) =>
@@ -519,7 +539,15 @@ public static class Endpoints
             }).ToList() ?? new List<FornecedorBanco>();
 
             await db.SaveChangesAsync();
-            return Results.Ok(fornecedor);
+            var atualizado = await db.Fornecedores
+                .Include(f => f.Enderecos)
+                .Include(f => f.Contatos)
+                .Include(f => f.Anexos)
+                .Include(f => f.Bancos)
+                .Include(f => f.Historicos)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.Id == fornecedor.Id);
+            return Results.Ok(MapToFornecedorDetalhesDto(atualizado!));
         }).WithSummary("Atualiza fornecedor");
 
         f.MapDelete("/fornecedores/{id:long}", async (long id, CadastroDbContext db) =>
@@ -1187,7 +1215,161 @@ public static class Endpoints
     }
 
     #endregion
+
+    #region Fornecedores
+    private static FornecedorDetalhesDto MapToFornecedorDetalhesDto(Fornecedor fornecedor)
+    {
+        return new FornecedorDetalhesDto(
+            fornecedor.Id,
+            fornecedor.Razao_Social,
+            fornecedor.Nome_Fantasia,
+            fornecedor.Cnpj,
+            fornecedor.Inscricao_Estadual,
+            fornecedor.Contato,
+            fornecedor.Email,
+            fornecedor.Telefone,
+            fornecedor.Observacoes,
+            fornecedor.Status,
+            fornecedor.Enderecos.Select(e => new FornecedorEnderecoDto(
+                e.Tipo,
+                e.Cep,
+                e.Logradouro,
+                e.Numero,
+                e.Bairro,
+                e.Cidade,
+                e.Estado,
+                e.Pais,
+                e.Complemento,
+                e.Principal
+            )).ToList(),
+            fornecedor.Contatos.Select(c => new FornecedorContatoDto(
+                c.Tipo,
+                c.Valor,
+                c.Principal,
+                c.Observacao
+            )).ToList(),
+            fornecedor.Anexos.Select(a => new FornecedorAnexoDto(
+                a.Nome,
+                a.Tipo,
+                a.Url,
+                a.Observacao
+            )).ToList(),
+            fornecedor.Bancos.Select(b => new FornecedorBancoDto(
+                b.Banco,
+                b.Agencia,
+                b.Conta,
+                b.Tipo_Conta,
+                b.Titular,
+                b.Documento_Titular,
+                b.Pix_Chave
+            )).ToList(),
+            fornecedor.Historicos.Select(h => new FornecedorHistoricoDto(
+                h.Data_Alteracao,
+                h.Usuario,
+                h.Campo,
+                h.Valor_Antigo,
+                h.Valor_Novo
+            )).ToList()
+        );
+    }
+    #endregion
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

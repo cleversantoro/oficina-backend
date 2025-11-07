@@ -13,7 +13,7 @@ public class FornecedorEndereco : Entity
     public string Numero { get; set; } = default!;
     public string Bairro { get; set; } = default!;
     public string Cidade { get; set; } = default!;
-public string Estado { get; set; } = default!;
+    public string Estado { get; set; } = default!;
     public string Pais { get; set; } = default!;
     public string? Complemento { get; set; }
     public bool Principal { get; set; }

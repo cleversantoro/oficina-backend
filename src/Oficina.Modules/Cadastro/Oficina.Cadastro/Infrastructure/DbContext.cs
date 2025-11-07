@@ -366,26 +366,12 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Observacoes).HasMaxLength(500);
             entity.Property(p => p.Status).HasMaxLength(20).HasDefaultValue("Ativo");
             entity.HasIndex(p => p.Cnpj).IsUnique();
-            entity.HasMany(p => p.Enderecos)
-                .WithOne(e => e.Fornecedor)
-                .HasForeignKey(e => e.Fornecedor_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Contatos)
-                .WithOne(c => c.Fornecedor)
-                .HasForeignKey(c => c.Fornecedor_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Anexos)
-                .WithOne(a => a.Fornecedor)
-                .HasForeignKey(a => a.Fornecedor_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Bancos)
-                .WithOne(b => b.Fornecedor)
-                .HasForeignKey(b => b.Fornecedor_Id)
-                .OnDelete(DeleteBehavior.Cascade);
-            entity.HasMany(p => p.Historicos)
-                .WithOne(h => h.Fornecedor)
-                .HasForeignKey(h => h.Fornecedor_Id)
-                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasMany(p => p.Enderecos).WithOne(e => e.Fornecedor).HasForeignKey(e => e.Fornecedor_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Contatos).WithOne(c => c.Fornecedor).HasForeignKey(c => c.Fornecedor_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Anexos).WithOne(a => a.Fornecedor).HasForeignKey(a => a.Fornecedor_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Bancos).WithOne(b => b.Fornecedor).HasForeignKey(b => b.Fornecedor_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Historicos).WithOne(h => h.Fornecedor).HasForeignKey(h => h.Fornecedor_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<FornecedorEndereco>(entity =>
