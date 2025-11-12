@@ -17,13 +17,41 @@ public static class Endpoints
 {
     public static void MapCadastroEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/cadastro").WithTags("Cadastro - Clientes");
 
         //Clientes
-        g.MapGet("/clientes", async ([AsParameters] ClienteFiltroDto filtro, CadastroDbContext db) =>
+        var g = app.MapGroup("/cadastro").WithTags("Cadastro - Clientes");
+
+        g.MapGet("/clientes", async (CadastroDbContext db) =>
+        {
+            var clientes = await db.Clientes
+                .AsNoTracking()
+                .Include(c => c.PessoaFisica)
+                .Include(c => c.PessoaJuridica)
+                .Include(c => c.Enderecos)
+                .Include(c => c.Contatos)
+                .Include(c => c.Consentimento)
+                .Include(c => c.Veiculos)
+                .Include(c => c.Anexos)
+                .Include(c => c.Documentos)
+                .Include(c => c.Origem)
+                .ToListAsync();
+
+            var result = clientes.OrderBy(c=> c.Nome).Select(MapToClienteDetalhesDto).ToList();
+            return Results.Ok(result);
+        }).WithSummary("Lista clientes");
+
+        g.MapGet("/clientes/filtro", async ([AsParameters] ClienteFiltroDto filtro, CadastroDbContext db) =>
         {
             var query = db.Clientes
                 .AsNoTracking()
+                .Include(c => c.PessoaFisica)
+                .Include(c => c.PessoaJuridica)
+                .Include(c => c.Enderecos)
+                .Include(c => c.Contatos)
+                .Include(c => c.Consentimento)
+                .Include(c => c.Veiculos)
+                .Include(c => c.Anexos)
+                .Include(c => c.Documentos)
                 .Include(c => c.Origem)
                 .AsQueryable();
 
@@ -32,39 +60,82 @@ public static class Endpoints
                 var nome = filtro.Nome.Trim();
                 query = query.Where(c => EF.Functions.Like(c.Nome, $"%{nome}%"));
             }
-
-            if (filtro.Status is not null)
-            {
-                query = query.Where(c => c.Status == filtro.Status);
-            }
-
-            if (filtro.Tipo is not null)
-            {
-                query = query.Where(c => c.Tipo == filtro.Tipo);
-            }
-
-            if (filtro.OrigemId is not null)
-            {
-                query = query.Where(c => c.Origem_Id == filtro.OrigemId);
-            }
-
-            if (filtro.Vip is not null)
-            {
-                query = query.Where(c => c.Vip == filtro.Vip);
-            }
+            if (filtro.Status is not null) query = query.Where(c => c.Status == filtro.Status);
+            if (filtro.Tipo is not null) query = query.Where(c => c.Tipo == filtro.Tipo);
+            if (filtro.OrigemId is not null) query = query.Where(c => c.Origem_Id == filtro.OrigemId);
+            if (filtro.Vip is not null) query = query.Where(c => c.Vip == filtro.Vip);
 
             var result = await query
                 .OrderBy(c => c.Nome)
-                .Select(c => new ClienteResumoDto(c.Codigo, c.Id, c.Nome, c.Status, ToOrigemDto(c.Origem), c.Vip, c.Tipo))
+                .Select(c => new ClienteDetalhesDto(
+                    c.Id,
+                    c.Codigo,
+                    c.Nome,
+                    c.Tipo,
+                    c.Status,
+                    c.Email,
+                    c.Vip,
+                    c.Observacoes,
+                    c.Updated_At,
+                    c.Created_At,
+                    ToOrigemDto(c.Origem),
+                    ToPessoaFisicaDto(c.PessoaFisica),
+                    ToPessoaJuridicaDto(c.PessoaJuridica),
+                    ToEnderecosDto(c.Enderecos),
+                    ToContatosDto(c.Contatos),
+                    ToConsentimentoDto(c.Consentimento),
+                    ToVeiculosDto(c.Veiculos),
+                    ToAnexosDto(c.Anexos),
+                    ToDocumentosDto(c.Documentos)
+                ))
                 .ToListAsync();
 
             return Results.Ok(result);
         }).WithSummary("Lista clientes com filtros");
 
-        g.MapGet("/clientes/{id:long}", async (long id, CadastroDbContext db) =>
+        g.MapGet("/clientes/paginado", async (CadastroDbContext db, int page = 1, int pageSize = 20) =>
         {
-            var cliente = await CarregarClientePorCodigo(db, id);
-            return cliente is null ? Results.NotFound() : Results.Ok(MapToDetalhesDto(cliente));
+            page = page < 1 ? 1 : page;
+            pageSize = pageSize is < 1 or > 200 ? 20 : pageSize;
+
+            var query = db.Clientes
+                .AsNoTracking()
+                .OrderBy(c => c.Nome)
+                .Select(c => new ClienteDetalhesDto(
+                    c.Id,
+                    c.Codigo,
+                    c.Nome,
+                    c.Tipo,
+                    c.Status,
+                    c.Email,
+                    c.Vip,
+                    c.Observacoes,
+                    c.Updated_At,
+                    c.Created_At,
+                    ToOrigemDto(c.Origem),
+                    ToPessoaFisicaDto(c.PessoaFisica),
+                    ToPessoaJuridicaDto(c.PessoaJuridica),
+                    ToEnderecosDto(c.Enderecos),
+                    ToContatosDto(c.Contatos),
+                    ToConsentimentoDto(c.Consentimento),
+                    ToVeiculosDto(c.Veiculos),
+                    ToAnexosDto(c.Anexos),
+                    ToDocumentosDto(c.Documentos)
+                ));
+
+            var total = await query.CountAsync();
+            var itens = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return Results.Ok(new { total, page, pageSize, itens });
+        }).WithSummary("Lista clientes (paginado)");
+
+        g.MapGet("/clientes/{codigo:long}", async (long codigo, CadastroDbContext db) =>
+        {
+            var cliente = await CarregarClientePorCodigo(db, codigo);
+            return cliente is null ? Results.NotFound() : Results.Ok(MapToClienteDetalhesDto(cliente));
         }).WithSummary("Obtém cliente por código");
 
         g.MapPost("/clientes", async (ClienteCreateDto dto, CadastroDbContext db, IValidator<ClienteCreateDto> validator) =>
@@ -77,7 +148,7 @@ public static class Endpoints
 
             if (!await db.ClienteOrigens.AnyAsync(o => o.Id == dto.OrigemId))
             {
-                return Results.BadRequest("Origem informada nÃ£o existe.");
+                return Results.BadRequest("Origem informada não existe.");
             }
 
             var cliente = MapToEntity(dto);
@@ -88,7 +159,7 @@ public static class Endpoints
             await transaction.CommitAsync();
 
             var created = await CarregarClientePorId(db, cliente.Id);
-            return Results.Created($"/cadastro/clientes/{cliente.Codigo}", MapToDetalhesDto(created!));
+            return Results.Created($"/cadastro/clientes/{cliente.Codigo}", MapToClienteDetalhesDto(created!));
         }).WithSummary("Cria cliente");
 
         g.MapPut("/clientes/{id:long}", async (long id, ClienteUpdateDto dto, CadastroDbContext db, IValidator<ClienteUpdateDto> validator) =>
@@ -101,7 +172,7 @@ public static class Endpoints
 
             if (!await db.ClienteOrigens.AnyAsync(o => o.Id == dto.OrigemId))
             {
-                return Results.BadRequest("Origem informada nÃ£o existe.");
+                return Results.BadRequest("Origem informada não existe.");
             }
 
             var cliente = await CarregarClientePorCodigo(db, id, track: true);
@@ -117,7 +188,7 @@ public static class Endpoints
             await transaction.CommitAsync();
 
             var atualizado = await CarregarClientePorId(db, cliente.Id);
-            return Results.Ok(MapToDetalhesDto(atualizado!));
+            return Results.Ok(MapToClienteDetalhesDto(atualizado!));
         }).WithSummary("Atualiza cliente");
 
         g.MapDelete("/clientes/{id:long}", async (long id, CadastroDbContext db) =>
@@ -132,6 +203,207 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Exclui cliente");
+
+        //Veiculos
+        var v = app.MapGroup("/cadastro").WithTags("Cadastro - Veiculos");
+
+        v.MapGet("/veiculos", async ([AsParameters] VeiculoFiltroDto filtro, CadastroDbContext db) =>
+        {
+            var query = db.VeiculosClientes
+                .AsNoTracking()
+                .Include(veiculo => veiculo.Cliente)
+                .Include(veiculo => veiculo.Modelo)
+                .AsQueryable();
+
+            if (filtro.ClienteId.HasValue)
+            {
+                query = query.Where(veiculo => veiculo.Cliente_Id == filtro.ClienteId.Value);
+            }
+
+            if (filtro.ClienteCodigo.HasValue)
+            {
+                var codigo = filtro.ClienteCodigo.Value;
+                query = query.Where(veiculo => veiculo.Cliente != null && veiculo.Cliente.Codigo == codigo);
+            }
+
+            if (!string.IsNullOrWhiteSpace(filtro.Placa))
+            {
+                var placa = filtro.Placa.Trim().ToUpperInvariant();
+                query = query.Where(veiculo => veiculo.Placa.ToUpper() == placa);
+            }
+
+            if (filtro.ModeloId.HasValue)
+            {
+                query = query.Where(veiculo => veiculo.Modelo_Id == filtro.ModeloId.Value);
+            }
+
+            if (filtro.Principal.HasValue)
+            {
+                query = query.Where(veiculo => veiculo.Principal == filtro.Principal.Value);
+            }
+
+            var veiculos = await query
+                .OrderBy(veiculo => veiculo.Cliente!.Nome)
+                .ThenBy(veiculo => veiculo.Placa)
+                .Select(veiculo => new VeiculoResumoDto(
+                    veiculo.Id,
+                    veiculo.Cliente_Id,
+                    veiculo.Cliente!.Codigo,
+                    veiculo.Cliente.Nome,
+                    veiculo.Placa,
+                    veiculo.Marca,
+                    veiculo.Modelo != null ? veiculo.Modelo.Nome : null,
+                    veiculo.Principal))
+                .ToListAsync();
+
+            return Results.Ok(veiculos);
+        }).WithSummary("Lista veículos");
+
+        v.MapGet("/veiculos/{id:long}", async (long id, CadastroDbContext db) =>
+        {
+            var veiculo = await CarregarVeiculoPorId(db, id);
+            return veiculo is null ? Results.NotFound() : Results.Ok(MapToVeiculoDetalhesDto(veiculo));
+        }).WithSummary("Obtém veículo por ID");
+
+        v.MapPost("/veiculos", async (VeiculoCreateDto dto, CadastroDbContext db, IValidator<VeiculoCreateDto> validator) =>
+        {
+            var validation = await validator.ValidateAsync(dto);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(validation.ToDictionary());
+            }
+
+            if (!await db.Clientes.AnyAsync(c => c.Id == dto.ClienteId))
+            {
+                return Results.BadRequest("Cliente informado não existe.");
+            }
+
+            if (dto.ModeloId.HasValue && !await db.VeiculoModelos.AnyAsync(m => m.Id == dto.ModeloId.Value))
+            {
+                return Results.BadRequest("Modelo informado não existe.");
+            }
+
+            var placa = NormalizePlaca(dto.Placa);
+            if (await db.VeiculosClientes.AnyAsync(v => v.Placa == placa))
+            {
+                return Results.BadRequest("Placa informada já está em uso.");
+            }
+
+            var renavam = Normalize(dto.Renavam);
+            if (!string.IsNullOrEmpty(renavam))
+            {
+                if (await db.VeiculosClientes.AnyAsync(v => v.Renavam == renavam))
+                {
+                    return Results.BadRequest("Renavam informado já está em uso.");
+                }
+            }
+
+            if (dto.Principal && await db.VeiculosClientes.AnyAsync(v => v.Cliente_Id == dto.ClienteId && v.Principal))
+            {
+                return Results.BadRequest("Cliente já possui um veículo marcado como principal.");
+            }
+
+            var veiculo = new VeiculoCliente
+            {
+                Cliente_Id = dto.ClienteId,
+                Placa = placa,
+                Marca = Normalize(dto.Marca),
+                Modelo_Id = dto.ModeloId,
+                Ano = dto.Ano,
+                Cor = Normalize(dto.Cor),
+                Chassi = Normalize(dto.Chassi),
+                Renavam = renavam,
+                Combustivel = Normalize(dto.Combustivel),
+                Observacao = Normalize(dto.Observacao),
+                Principal = dto.Principal
+            };
+
+            db.VeiculosClientes.Add(veiculo);
+            await db.SaveChangesAsync();
+
+            var criado = await CarregarVeiculoPorId(db, veiculo.Id);
+            return Results.Created($"/cadastro/veiculos/{veiculo.Id}", MapToVeiculoDetalhesDto(criado!));
+        }).WithSummary("Cria veículo");
+
+        v.MapPut("/veiculos/{id:long}", async (long id, VeiculoUpdateDto dto, CadastroDbContext db, IValidator<VeiculoUpdateDto> validator) =>
+        {
+            var validation = await validator.ValidateAsync(dto);
+            if (!validation.IsValid)
+            {
+                return Results.ValidationProblem(validation.ToDictionary());
+            }
+
+            var veiculo = await CarregarVeiculoPorId(db, id, track: true);
+            if (veiculo is null)
+            {
+                return Results.NotFound();
+            }
+
+            if (!await db.Clientes.AnyAsync(c => c.Id == dto.ClienteId))
+            {
+                return Results.BadRequest("Cliente informado não existe.");
+            }
+
+            if (dto.ModeloId.HasValue && !await db.VeiculoModelos.AnyAsync(m => m.Id == dto.ModeloId.Value))
+            {
+                return Results.BadRequest("Modelo informado não existe.");
+            }
+
+            var novaPlaca = NormalizePlaca(dto.Placa);
+            if (!veiculo.Placa.Equals(novaPlaca, StringComparison.OrdinalIgnoreCase) &&
+                await db.VeiculosClientes.AnyAsync(v => v.Placa == novaPlaca && v.Id != veiculo.Id))
+            {
+                return Results.BadRequest("Placa informada já está em uso.");
+            }
+
+            var novoRenavam = Normalize(dto.Renavam);
+            if (!string.Equals(veiculo.Renavam, novoRenavam, StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrEmpty(novoRenavam) &&
+                await db.VeiculosClientes.AnyAsync(v => v.Renavam == novoRenavam && v.Id != veiculo.Id))
+            {
+                return Results.BadRequest("Renavam informado já está em uso.");
+            }
+
+            if (dto.Principal)
+            {
+                var existePrincipal = await db.VeiculosClientes
+                    .AnyAsync(v => v.Cliente_Id == dto.ClienteId && v.Principal && v.Id != veiculo.Id);
+                if (existePrincipal)
+                {
+                    return Results.BadRequest("Cliente já possui um veículo marcado como principal.");
+                }
+            }
+
+            veiculo.Cliente_Id = dto.ClienteId;
+            veiculo.Placa = novaPlaca;
+            veiculo.Marca = Normalize(dto.Marca);
+            veiculo.Modelo_Id = dto.ModeloId;
+            veiculo.Ano = dto.Ano;
+            veiculo.Cor = Normalize(dto.Cor);
+            veiculo.Chassi = Normalize(dto.Chassi);
+            veiculo.Renavam = novoRenavam;
+            veiculo.Combustivel = Normalize(dto.Combustivel);
+            veiculo.Observacao = Normalize(dto.Observacao);
+            veiculo.Principal = dto.Principal;
+
+            await db.SaveChangesAsync();
+
+            var atualizado = await CarregarVeiculoPorId(db, veiculo.Id);
+            return Results.Ok(MapToVeiculoDetalhesDto(atualizado!));
+        }).WithSummary("Atualiza veículo");
+
+        v.MapDelete("/veiculos/{id:long}", async (long id, CadastroDbContext db) =>
+        {
+            var veiculo = await db.VeiculosClientes.FirstOrDefaultAsync(v => v.Id == id);
+            if (veiculo is null)
+            {
+                return Results.NotFound();
+            }
+
+            db.VeiculosClientes.Remove(veiculo);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        }).WithSummary("Remove veículo");
 
         //mecanicos
         var m = app.MapGroup("/cadastro").WithTags("Cadastro - Mecânicos");
@@ -371,7 +643,7 @@ public static class Endpoints
 
         //Fornecedores
         var f = app.MapGroup("/cadastro").WithTags("Cadastro - Fornecedores");
-        
+
         f.MapGet("/fornecedores", async (CadastroDbContext db) =>
         {
             var fornecedores = await db.Fornecedores
@@ -560,11 +832,121 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Exclui fornecedor");
     }
+    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
-    private static string? Normalize(string? value) =>
-        string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    private static string NormalizePlaca(string placa) => placa.Trim().ToUpperInvariant();
 
     #region Clientes
+    private static IReadOnlyCollection<ClienteDocumentoDto> ToDocumentosDto(ICollection<ClienteDocumento> documentos) =>
+        documentos
+            .Select(d => new ClienteDocumentoDto(
+                d.Tipo,
+                d.Documento,
+                d.Data_Emissao,
+                d.Data_Validade,
+                d.Orgao_Expedidor,
+                d.Principal))
+            .ToList();
+
+    private static IReadOnlyCollection<ClienteAnexoDto> ToAnexosDto(ICollection<ClienteAnexo> anexos) =>
+        anexos
+            .Select(a => new ClienteAnexoDto(
+                a.Nome,
+                a.Tipo,
+                a.Url,
+                a.Observacao))
+            .ToList();
+
+    private static IReadOnlyCollection<ClienteVeiculoDto> ToVeiculosDto(ICollection<VeiculoCliente> veiculos) =>
+        veiculos
+            .Select(v => new ClienteVeiculoDto(
+                v.Placa,
+                v.Marca,
+                v.Modelo_Id,
+                v.Modelo?.Nome,
+                v.Ano,
+                v.Cor,
+                v.Chassi,
+                v.Principal))
+            .ToList();
+
+    private static IReadOnlyCollection<ClienteConsentimentoDto> ToConsentimentoDto(ClienteConsentimento? consentimento) =>
+        consentimento is null
+            ? Array.Empty<ClienteConsentimentoDto>()
+            : new[]
+            {
+                new ClienteConsentimentoDto(
+                    consentimento.Tipo,
+                    consentimento.Aceito,
+                    consentimento.Data,
+                    consentimento.Valido_Ate,
+                    consentimento.Observacoes)
+            };
+
+    private static IReadOnlyCollection<ClienteContatoDto> ToContatosDto(ICollection<ClienteContato> contatos) =>
+        contatos
+            .Select(c => new ClienteContatoDto(
+                c.Tipo,
+                c.Valor,
+                c.Principal,
+                c.Observacao))
+            .ToList();
+
+    private static IReadOnlyCollection<ClienteEnderecoDto> ToEnderecosDto(ICollection<ClienteEndereco> enderecos) =>
+        enderecos
+            .Select(e => new ClienteEnderecoDto(
+                e.Tipo,
+                e.Cep,
+                e.Logradouro,
+                e.Numero,
+                e.Bairro,
+                e.Cidade,
+                e.Estado,
+                e.Pais,
+                e.Complemento,
+                e.Principal))
+            .ToList();
+
+    private static ClienteOrigemDto? ToOrigemDto(ClienteOrigem? origem) => origem is null ? null : new ClienteOrigemDto(origem.Id, origem.Nome, origem.Descricao);
+
+    private static ClientePessoaJuridicaDto? ToPessoaJuridicaDto(ClientePessoaJuridica? pessoaJuridica) => pessoaJuridica is null ? null : new ClientePessoaJuridicaDto(
+        pessoaJuridica.Cnpj,
+        pessoaJuridica.Razao_Social,
+        pessoaJuridica.Nome_Fantasia,
+        pessoaJuridica.Inscricao_Estadual,
+        pessoaJuridica.Responsavel);
+
+    private static ClientePessoaFisicaDto? ToPessoaFisicaDto(ClientePessoaFisica? pessoaFisica) => pessoaFisica is null ? null : new ClientePessoaFisicaDto(
+            pessoaFisica.Cpf,
+            pessoaFisica.Rg,
+            pessoaFisica.Data_Nascimento,
+            pessoaFisica.Genero);
+
+    private static ClienteDetalhesDto MapToClienteDetalhesDto(Cliente cliente)
+    {
+        return new ClienteDetalhesDto(
+            cliente.Id,
+            cliente.Codigo,
+            cliente.Nome,
+            cliente.Tipo,
+            cliente.Status,
+            cliente.Email,
+            cliente.Vip,
+            cliente.Observacoes,
+            cliente.Created_At,
+            cliente.Updated_At,
+            ToOrigemDto(cliente.Origem),
+            ToPessoaFisicaDto(cliente.PessoaFisica),
+            ToPessoaJuridicaDto(cliente.PessoaJuridica),
+            ToEnderecosDto(cliente.Enderecos),
+            ToContatosDto(cliente.Contatos),
+            ToConsentimentoDto(cliente.Consentimento),
+            ToVeiculosDto(cliente.Veiculos),
+            ToAnexosDto(cliente.Anexos),
+            ToDocumentosDto(cliente.Documentos)
+        );
+    }
+
     private static void AtualizarCliente(Cliente cliente, ClienteUpdateDto dto, CadastroDbContext db)
     {
         cliente.Nome = dto.Nome;
@@ -702,6 +1084,18 @@ public static class Endpoints
             Url = a.Url,
             Observacao = a.Observacao
         }).ToList() ?? new List<ClienteAnexo>();
+
+        db.ClienteDocumentos.RemoveRange(cliente.Documentos);
+        cliente.Documentos = dto.Documentos?.Select(d => new ClienteDocumento
+        {
+            Cliente_Id = cliente.Id,
+            Tipo = d.Tipo,
+            Documento = d.Documento,
+            Data_Emissao = d.DataEmissao,
+            Data_Validade = d.DataValidade,
+            Orgao_Expedidor = d.OrgaoExpedidor,
+            Principal = d.Principal
+        }).ToList() ?? new List<ClienteDocumento>();
     }
 
     private static async Task<Cliente?> CarregarClientePorCodigo(CadastroDbContext db, long codigo, bool track = false)
@@ -714,6 +1108,7 @@ public static class Endpoints
             .Include(c => c.Consentimento)
             .Include(c => c.Veiculos)
             .Include(c => c.Anexos)
+            .Include(c => c.Documentos)
             .Include(c => c.Origem)
             .Where(c => c.Codigo == codigo);
 
@@ -735,95 +1130,10 @@ public static class Endpoints
             .Include(c => c.Consentimento)
             .Include(c => c.Veiculos)
             .Include(c => c.Anexos)
+            .Include(c => c.Documentos)
             .Include(c => c.Origem)
             .AsNoTracking()
             .FirstOrDefaultAsync(c => c.Id == id);
-    }
-
-    private static ClienteOrigemDto? ToOrigemDto(ClienteOrigem? origem) =>
-        origem is null ? null : new ClienteOrigemDto(origem.Id, origem.Nome, origem.Descricao);
-
-    private static ClienteDetalhesDto MapToDetalhesDto(Cliente cliente)
-    {
-        var pessoaFisica = cliente.PessoaFisica is null
-            ? null
-            : new ClientePessoaFisicaDto(
-                cliente.PessoaFisica.Cpf,
-                cliente.PessoaFisica.Rg,
-                cliente.PessoaFisica.Data_Nascimento,
-                cliente.PessoaFisica.Genero);
-
-        var pessoaJuridica = cliente.PessoaJuridica is null
-            ? null
-            : new ClientePessoaJuridicaDto(
-                cliente.PessoaJuridica.Cnpj,
-                cliente.PessoaJuridica.Razao_Social,
-                cliente.PessoaJuridica.Nome_Fantasia,
-                cliente.PessoaJuridica.Inscricao_Estadual,
-                cliente.PessoaJuridica.Responsavel);
-
-        var enderecos = cliente.Enderecos
-            .Select(e => new ClienteEnderecoDto(
-                e.Tipo,
-                e.Cep,
-                e.Logradouro,
-                e.Numero,
-                e.Bairro,
-                e.Cidade,
-                e.Estado,
-                e.Pais,
-                e.Complemento,
-                e.Principal))
-            .ToList();
-
-        var contatos = cliente.Contatos
-            .Select(c => new ClienteContatoDto(c.Tipo, c.Valor, c.Principal, c.Observacao))
-            .ToList();
-
-        var consentimentos = cliente.Consentimento is null
-            ? Array.Empty<ClienteConsentimentoDto>()
-            : new[]
-            {
-                new ClienteConsentimentoDto(
-                    cliente.Consentimento.Tipo,
-                    cliente.Consentimento.Aceito,
-                    cliente.Consentimento.Data,
-                    cliente.Consentimento.Valido_Ate,
-                    cliente.Consentimento.Observacoes)
-            };
-
-        var veiculos = cliente.Veiculos
-            .Select(v => new ClienteVeiculoDto(
-                v.Placa,
-                v.Marca,
-                v.Modelo_Id,
-                v.Modelo?.Nome,
-                v.Ano,
-                v.Cor,
-                v.Chassi,
-                v.Principal))
-            .ToList();
-
-        var anexos = cliente.Anexos
-            .Select(a => new ClienteAnexoDto(a.Nome, a.Tipo, a.Url, a.Observacao))
-            .ToList();
-
-        return new ClienteDetalhesDto(
-            cliente.Codigo,
-            cliente.Id,
-            cliente.Nome,
-            cliente.Tipo,
-            cliente.Status,
-            ToOrigemDto(cliente.Origem),
-            cliente.Vip,
-            cliente.Observacoes,
-            pessoaFisica,
-            pessoaJuridica,
-            enderecos,
-            contatos,
-            consentimentos,
-            veiculos,
-            anexos);
     }
 
     private static Cliente MapToEntity(ClienteCreateDto dto)
@@ -946,7 +1256,58 @@ public static class Endpoints
             Observacao = a.Observacao
         }).ToList() ?? new List<ClienteAnexo>();
 
+        cliente.Documentos = dto.Documentos?.Select(d => new ClienteDocumento
+        {
+            Cliente_Id = cliente.Id,
+            Tipo = d.Tipo,
+            Documento = d.Documento,
+            Data_Emissao = d.DataEmissao,
+            Data_Validade = d.DataValidade,
+            Orgao_Expedidor = d.OrgaoExpedidor,
+            Principal = d.Principal
+        }).ToList() ?? new List<ClienteDocumento>();
+
         return cliente;
+    }
+    #endregion
+
+    #region Veiculos
+    private static async Task<VeiculoCliente?> CarregarVeiculoPorId(CadastroDbContext db, long id, bool track = false)
+    {
+        var query = db.VeiculosClientes
+            .Include(v => v.Cliente)
+            .Include(v => v.Modelo)
+            .AsQueryable();
+
+        if (!track)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query.FirstOrDefaultAsync(v => v.Id == id);
+    }
+
+    private static VeiculoDetalhesDto MapToVeiculoDetalhesDto(VeiculoCliente veiculo)
+    {
+        var clienteCodigo = veiculo.Cliente?.Codigo ?? 0;
+        var clienteNome = veiculo.Cliente?.Nome ?? string.Empty;
+
+        return new VeiculoDetalhesDto(
+            veiculo.Id,
+            veiculo.Cliente_Id,
+            clienteCodigo,
+            clienteNome,
+            veiculo.Placa,
+            veiculo.Marca,
+            veiculo.Modelo_Id,
+            veiculo.Modelo?.Nome,
+            veiculo.Ano,
+            veiculo.Cor,
+            veiculo.Chassi,
+            veiculo.Renavam,
+            veiculo.Combustivel,
+            veiculo.Observacao,
+            veiculo.Principal);
     }
     #endregion
 
@@ -1274,132 +1635,4 @@ public static class Endpoints
     }
     #endregion
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

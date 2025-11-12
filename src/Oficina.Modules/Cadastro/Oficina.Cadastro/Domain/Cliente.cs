@@ -28,6 +28,7 @@ public class Cliente : Entity
     public ICollection<ClienteIndicacao> Indicacoes { get; set; } = new List<ClienteIndicacao>();
     public ICollection<VeiculoCliente> Veiculos { get; set; } = new List<VeiculoCliente>();
     public ICollection<ClienteAnexo> Anexos { get; set; } = new List<ClienteAnexo>();
+    public ICollection<ClienteDocumento> Documentos { get; set; } = new List<ClienteDocumento>();
 
     public void DefinirCodigo(long codigo)
     {

@@ -11,6 +11,7 @@ TRUNCATE TABLE cad_veiculos;
 TRUNCATE TABLE cad_veiculos_modelos;
 TRUNCATE TABLE cad_veiculos_marcas;
 TRUNCATE TABLE cad_clientes_anexos;
+TRUNCATE TABLE cad_clientes_documentos;
 TRUNCATE TABLE cad_clientes_lgpd_consentimentos;
 TRUNCATE TABLE cad_clientes_financeiro;
 TRUNCATE TABLE cad_clientes_indicacoes;

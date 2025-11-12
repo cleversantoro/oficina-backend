@@ -186,6 +186,24 @@ CREATE TABLE IF NOT EXISTS cad_clientes_anexos (
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS cad_clientes_documentos (
+    Id BIGINT NOT NULL AUTO_INCREMENT,
+    Created_At DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    Updated_At DATETIME(6) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP(6),
+    Cliente_Id BIGINT NOT NULL,
+    Tipo VARCHAR(30) NOT NULL,
+    Documento VARCHAR(40) NOT NULL,
+    Data_Emissao DATE NULL,
+    Data_Validade DATE NULL,
+    Orgao_Expedidor VARCHAR(80),
+    Principal TINYINT(1) NOT NULL DEFAULT 0,
+    PRIMARY KEY (Id),
+    UNIQUE KEY UX_cad_clientes_documentos_cliente_tipo_documento (Cliente_Id, Tipo, Documento),
+    CONSTRAINT FK_cad_clientes_documentos_cliente FOREIGN KEY (Cliente_Id)
+        REFERENCES cad_clientes (Id)
+        ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- ============================================================================
 -- Colaboradores - Mecanicos
 -- ============================================================================

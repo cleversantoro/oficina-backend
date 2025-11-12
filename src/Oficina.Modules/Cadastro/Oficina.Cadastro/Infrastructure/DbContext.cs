@@ -16,6 +16,7 @@ public class CadastroDbContext : DbContext
     public DbSet<ClienteConsentimento> ClienteConsentimentos => Set<ClienteConsentimento>();
     public DbSet<ClienteFinanceiro> ClienteFinanceiro => Set<ClienteFinanceiro>();
     public DbSet<ClienteAnexo> ClienteAnexos => Set<ClienteAnexo>();
+    public DbSet<ClienteDocumento> ClienteDocumentos => Set<ClienteDocumento>();
     public DbSet<ClientePessoaFisica> ClientesPessoaFisica => Set<ClientePessoaFisica>();
     public DbSet<ClientePessoaJuridica> ClientesPessoaJuridica => Set<ClientePessoaJuridica>();
     #endregion
@@ -65,6 +66,7 @@ public class CadastroDbContext : DbContext
             entity.HasOne(p => p.PessoaJuridica).WithOne().HasForeignKey<ClientePessoaJuridica>(pj => pj.Cliente_Id).HasPrincipalKey<Cliente>(c => c.Id).OnDelete(DeleteBehavior.Cascade).IsRequired(false);
 
             entity.HasMany(p => p.Anexos).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
+            entity.HasMany(p => p.Documentos).WithOne(e => e.Cliente).HasForeignKey(e => e.Cliente_Id).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<ClienteOrigem>(entity =>
@@ -167,6 +169,20 @@ public class CadastroDbContext : DbContext
             entity.Property(p => p.Url).HasMaxLength(500).IsRequired();
             entity.Property(p => p.Observacao).HasMaxLength(240);
             entity.HasIndex(p => new { p.Cliente_Id, p.Nome }).IsUnique();
+        });
+
+        modelBuilder.Entity<ClienteDocumento>(entity =>
+        {
+            entity.ToTable("cad_clientes_documentos");
+            entity.Property(p => p.Tipo).HasMaxLength(30).IsRequired();
+            entity.Property(p => p.Documento).HasMaxLength(40).IsRequired();
+            entity.Property(p => p.Orgao_Expedidor).HasMaxLength(80);
+            entity.Property(p => p.Principal).HasDefaultValue(false);
+            entity.HasIndex(p => new { p.Cliente_Id, p.Tipo, p.Documento }).IsUnique();
+            entity.HasOne(p => p.Cliente)
+                .WithMany(c => c.Documentos)
+                .HasForeignKey(p => p.Cliente_Id)
+                .OnDelete(DeleteBehavior.Cascade);
         });
         #endregion
 

@@ -76,6 +76,40 @@ public class ClienteVeiculoDtoValidator : AbstractValidator<ClienteVeiculoDto>
     }
 }
 
+public class VeiculoCreateDtoValidator : AbstractValidator<VeiculoCreateDto>
+{
+    public VeiculoCreateDtoValidator()
+    {
+        RuleFor(x => x.ClienteId).GreaterThan(0);
+        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
+        RuleFor(x => x.Marca).MaximumLength(80);
+        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
+        RuleFor(x => x.Ano).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano.HasValue);
+        RuleFor(x => x.Cor).MaximumLength(60);
+        RuleFor(x => x.Chassi).MaximumLength(40);
+        RuleFor(x => x.Renavam).MaximumLength(20);
+        RuleFor(x => x.Combustivel).MaximumLength(40);
+        RuleFor(x => x.Observacao).MaximumLength(240);
+    }
+}
+
+public class VeiculoUpdateDtoValidator : AbstractValidator<VeiculoUpdateDto>
+{
+    public VeiculoUpdateDtoValidator()
+    {
+        RuleFor(x => x.ClienteId).GreaterThan(0);
+        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
+        RuleFor(x => x.Marca).MaximumLength(80);
+        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
+        RuleFor(x => x.Ano).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano.HasValue);
+        RuleFor(x => x.Cor).MaximumLength(60);
+        RuleFor(x => x.Chassi).MaximumLength(40);
+        RuleFor(x => x.Renavam).MaximumLength(20);
+        RuleFor(x => x.Combustivel).MaximumLength(40);
+        RuleFor(x => x.Observacao).MaximumLength(240);
+    }
+}
+
 public class ClienteAnexoDtoValidator : AbstractValidator<ClienteAnexoDto>
 {
     public ClienteAnexoDtoValidator()
@@ -84,6 +118,20 @@ public class ClienteAnexoDtoValidator : AbstractValidator<ClienteAnexoDto>
         RuleFor(x => x.Tipo).NotEmpty().MaximumLength(80);
         RuleFor(x => x.Url).NotEmpty().MaximumLength(300);
         RuleFor(x => x.Observacao).MaximumLength(200);
+    }
+}
+
+public class ClienteDocumentoDtoValidator : AbstractValidator<ClienteDocumentoDto>
+{
+    public ClienteDocumentoDtoValidator()
+    {
+        RuleFor(x => x.Tipo).NotEmpty().MaximumLength(30);
+        RuleFor(x => x.Documento).NotEmpty().MaximumLength(40);
+        RuleFor(x => x.OrgaoExpedidor).MaximumLength(80);
+        RuleFor(x => x.DataValidade)
+            .GreaterThanOrEqualTo(x => x.DataEmissao)
+            .When(x => x.DataEmissao.HasValue && x.DataValidade.HasValue)
+            .WithMessage("Data de validade deve ser maior ou igual a data de emissao.");
     }
 }
 
@@ -137,6 +185,14 @@ public class ClienteCreateValidator : AbstractValidator<ClienteCreateDto>
         When(x => x.Anexos is { Count: > 0 }, () =>
         {
             RuleForEach(x => x.Anexos!).SetValidator(new ClienteAnexoDtoValidator());
+        });
+
+        When(x => x.Documentos is { Count: > 0 }, () =>
+        {
+            RuleFor(x => x.Documentos!)
+                .Must(TemApenasUmPrincipal)
+                .WithMessage("E permitido somente um documento principal.");
+            RuleForEach(x => x.Documentos!).SetValidator(new ClienteDocumentoDtoValidator());
         });
     }
 
@@ -202,6 +258,14 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
         When(x => x.Anexos is { Count: > 0 }, () =>
         {
             RuleForEach(x => x.Anexos!).SetValidator(new ClienteAnexoDtoValidator());
+        });
+
+        When(x => x.Documentos is { Count: > 0 }, () =>
+        {
+            RuleFor(x => x.Documentos!)
+                .Must(ClienteCreateValidator.TemApenasUmPrincipal)
+                .WithMessage("E permitido somente um documento principal.");
+            RuleForEach(x => x.Documentos!).SetValidator(new ClienteDocumentoDtoValidator());
         });
     }
 }
