@@ -62,54 +62,6 @@ public class ClienteConsentimentoDtoValidator : AbstractValidator<ClienteConsent
     }
 }
 
-public class ClienteVeiculoDtoValidator : AbstractValidator<ClienteVeiculoDto>
-{
-    public ClienteVeiculoDtoValidator()
-    {
-        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
-        RuleFor(x => x.Marca).MaximumLength(80);
-        RuleFor(x => x.ModeloNome).MaximumLength(160);
-        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
-        RuleFor(x => x.Cor).MaximumLength(60);
-        RuleFor(x => x.Chassi).MaximumLength(30);
-        RuleFor(x => x.Ano).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano.HasValue);
-    }
-}
-
-public class VeiculoCreateDtoValidator : AbstractValidator<VeiculoCreateDto>
-{
-    public VeiculoCreateDtoValidator()
-    {
-        RuleFor(x => x.ClienteId).GreaterThan(0);
-        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
-        RuleFor(x => x.Marca).MaximumLength(80);
-        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
-        RuleFor(x => x.Ano).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano.HasValue);
-        RuleFor(x => x.Cor).MaximumLength(60);
-        RuleFor(x => x.Chassi).MaximumLength(40);
-        RuleFor(x => x.Renavam).MaximumLength(20);
-        RuleFor(x => x.Combustivel).MaximumLength(40);
-        RuleFor(x => x.Observacao).MaximumLength(240);
-    }
-}
-
-public class VeiculoUpdateDtoValidator : AbstractValidator<VeiculoUpdateDto>
-{
-    public VeiculoUpdateDtoValidator()
-    {
-        RuleFor(x => x.ClienteId).GreaterThan(0);
-        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
-        RuleFor(x => x.Marca).MaximumLength(80);
-        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
-        RuleFor(x => x.Ano).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano.HasValue);
-        RuleFor(x => x.Cor).MaximumLength(60);
-        RuleFor(x => x.Chassi).MaximumLength(40);
-        RuleFor(x => x.Renavam).MaximumLength(20);
-        RuleFor(x => x.Combustivel).MaximumLength(40);
-        RuleFor(x => x.Observacao).MaximumLength(240);
-    }
-}
-
 public class ClienteAnexoDtoValidator : AbstractValidator<ClienteAnexoDto>
 {
     public ClienteAnexoDtoValidator()
@@ -179,7 +131,7 @@ public class ClienteCreateValidator : AbstractValidator<ClienteCreateDto>
         When(x => x.Veiculos is { Count: > 0 }, () =>
         {
             RuleFor(x => x.Veiculos!).Must(TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um veÃ­culo principal.");
-            RuleForEach(x => x.Veiculos!).SetValidator(new ClienteVeiculoDtoValidator());
+            RuleForEach(x => x.Veiculos!).SetValidator(new VeiculoClienteDtoValidator());
         });
 
         When(x => x.Anexos is { Count: > 0 }, () =>
@@ -252,7 +204,7 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
         When(x => x.Veiculos is { Count: > 0 }, () =>
         {
             RuleFor(x => x.Veiculos!).Must(ClienteCreateValidator.TemApenasUmPrincipal).WithMessage("Ã‰ permitido somente um veÃ­culo principal.");
-            RuleForEach(x => x.Veiculos!).SetValidator(new ClienteVeiculoDtoValidator());
+            RuleForEach(x => x.Veiculos!).SetValidator(new VeiculoClienteDtoValidator());
         });
 
         When(x => x.Anexos is { Count: > 0 }, () =>
@@ -269,6 +221,58 @@ public class ClienteUpdateValidator : AbstractValidator<ClienteUpdateDto>
         });
     }
 }
+
+
+public class VeiculoClienteDtoValidator : AbstractValidator<VeiculoClienteDto>
+{
+    public VeiculoClienteDtoValidator()
+    {
+        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
+        RuleFor(x => x.ModeloNome).MaximumLength(160);
+        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
+        RuleFor(x => x.Cor).MaximumLength(60);
+        RuleFor(x => x.Chassi).MaximumLength(30);
+        RuleFor(x => x.Ano_Fab).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano_Fab.HasValue);
+        RuleFor(x => x.Ano_Mod).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano_Mod.HasValue);
+    }
+}
+
+public class VeiculoCreateDtoValidator : AbstractValidator<VeiculoCreateDto>
+{
+    public VeiculoCreateDtoValidator()
+    {
+        RuleFor(x => x.ClienteId).GreaterThan(0);
+        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
+        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
+        RuleFor(x => x.Ano_Fab).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano_Fab.HasValue);
+        RuleFor(x => x.Ano_Mod).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano_Mod.HasValue);
+        RuleFor(x => x.Cor).MaximumLength(60);
+        RuleFor(x => x.Chassi).MaximumLength(40);
+        RuleFor(x => x.Renavam).MaximumLength(20);
+        RuleFor(x => x.Km).MaximumLength(100);
+        RuleFor(x => x.Combustivel).MaximumLength(40);
+        RuleFor(x => x.Observacao).MaximumLength(240);
+    }
+}
+
+public class VeiculoUpdateDtoValidator : AbstractValidator<VeiculoUpdateDto>
+{
+    public VeiculoUpdateDtoValidator()
+    {
+        RuleFor(x => x.ClienteId).GreaterThan(0);
+        RuleFor(x => x.Placa).NotEmpty().MaximumLength(10);
+        RuleFor(x => x.ModeloId).GreaterThan(0).When(x => x.ModeloId.HasValue);
+        RuleFor(x => x.Ano_Fab).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano_Fab.HasValue);
+        RuleFor(x => x.Ano_Mod).InclusiveBetween(1900, DateTime.UtcNow.Year + 1).When(x => x.Ano_Mod.HasValue);
+        RuleFor(x => x.Cor).MaximumLength(60);
+        RuleFor(x => x.Chassi).MaximumLength(40);
+        RuleFor(x => x.Renavam).MaximumLength(20);
+        RuleFor(x => x.Km).MaximumLength(100);
+        RuleFor(x => x.Combustivel).MaximumLength(40);
+        RuleFor(x => x.Observacao).MaximumLength(240);
+    }
+}
+
 
 public class MecanicoEspecialidadeRelDtoValidator : AbstractValidator<MecanicoEspecialidadeRelDto>
 {
@@ -426,6 +430,8 @@ public class MecanicoCreateValidator : AbstractValidator<MecanicoCreateDto>
         });
     }
 }
+
+
 
 public class FornecedorCreateValidator : AbstractValidator<FornecedorCreateDto>
 {

@@ -16,5 +16,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Oficina.BuildingBlocks\Oficina.BuildingBlocks\Oficina.BuildingBlocks.csproj" />
 		<ProjectReference Include="..\..\..\Oficina.BuildingBlocks\Oficina.SharedKernel\Oficina.SharedKernel.csproj" />
+		<ProjectReference Include="..\..\Cadastro\Oficina.Cadastro\Oficina.Cadastro.csproj" />
 	</ItemGroup>
 </Project>

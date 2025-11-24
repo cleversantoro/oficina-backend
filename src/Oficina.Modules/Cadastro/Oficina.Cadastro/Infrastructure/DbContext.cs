@@ -191,13 +191,19 @@ public class CadastroDbContext : DbContext
         {
             entity.ToTable("cad_veiculos");
             entity.Property(p => p.Placa).HasMaxLength(10).IsRequired();
+            entity.Property(p => p.Ano_Fab);    
+            entity.Property(p => p.Ano_Mod);    
             entity.Property(p => p.Cor).HasMaxLength(40);
-            entity.Property(p => p.Renavam).HasMaxLength(20);
             entity.Property(p => p.Chassi).HasMaxLength(40);
+            entity.Property(p => p.Renavam).HasMaxLength(20);
+            entity.Property(p => p.Km).HasMaxLength(10).IsRequired();
             entity.Property(p => p.Combustivel).HasMaxLength(40);
             entity.Property(p => p.Observacao).HasMaxLength(240);
+            entity.Property(p => p.Principal);
+            entity.Property(p => p.Ativo);
             entity.HasIndex(p => p.Placa).IsUnique();
-            entity.HasIndex(p => p.Renavam).IsUnique().HasFilter("Renavam IS NOT NULL");
+            entity.HasIndex(p => p.Renavam).IsUnique().HasFilter("Renavam não pode ser nulo.");
+            //entity.HasIndex(p => p.Modelo_Id).IsUnique();
             entity.HasOne(p => p.Modelo).WithMany(m => m.Veiculos).HasForeignKey(p => p.Modelo_Id).OnDelete(DeleteBehavior.Restrict).IsRequired(false);
         });
 

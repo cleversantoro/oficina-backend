@@ -18,7 +18,6 @@ public static class Endpoints
     public static void MapEstoqueEndpoints(this IEndpointRouteBuilder app)
     {
         var g = app.MapGroup("/estoque").WithTags("Estoque - Peças");
-
         g.MapGet("/pecas", async (EstoqueDbContext db) =>
         {
             var pecas = await db.Pecas
@@ -30,7 +29,6 @@ public static class Endpoints
             var result = pecas.Select(MapToPecasDetalhesDto).ToList();
             return Results.Ok(result);
         }).WithSummary("Lista Pecas");
-
         g.MapGet("/pecas/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var peca = await db.Pecas
@@ -41,7 +39,6 @@ public static class Endpoints
                 .FirstOrDefaultAsync(p => p.Id == id);
             return peca is null ? Results.NotFound() : Results.Ok(peca);
         }).WithSummary("Detalhes da peça");
-
         g.MapPost("/pecas", async (PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if (!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
@@ -76,7 +73,6 @@ public static class Endpoints
             };
             db.Pecas.Add(p); await db.SaveChangesAsync(); return Results.Created($"/estoque/pecas/{p.Id}", p);
         }).WithSummary("Cria peça");
-
         g.MapPut("/pecas/{id:long}", async (long id, PecaCreateDto dto, EstoqueDbContext db, IValidator<PecaCreateDto> v) =>
         {
             var vr = await v.ValidateAsync(dto); if (!vr.IsValid) return Results.ValidationProblem(vr.ToDictionary());
@@ -116,7 +112,6 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.Ok(peca);
         }).WithSummary("Atualiza peça");
-
         g.MapDelete("/pecas/{id:long}", async (long id, EstoqueDbContext db) =>
         {
             var peca = await db.Pecas.FirstOrDefaultAsync(p => p.Id == id);

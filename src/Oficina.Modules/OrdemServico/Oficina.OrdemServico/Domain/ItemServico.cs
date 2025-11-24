@@ -1,4 +1,5 @@
 ﻿using Oficina.SharedKernel.Domain;
+
 namespace Oficina.OrdemServico.Domain;
 public class ItemServico : Entity
 {

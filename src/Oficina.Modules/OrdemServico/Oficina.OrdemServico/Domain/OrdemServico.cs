@@ -1,6 +1,8 @@
-﻿using Oficina.SharedKernel.Domain;
+﻿using Oficina.Cadastro.Domain;
+using Oficina.SharedKernel.Domain;
 using System.Collections.Generic;
 namespace Oficina.OrdemServico.Domain;
+
 public class OrdemServico : Entity
 {
     public long Cliente_Id { get; set; }
@@ -9,6 +11,8 @@ public class OrdemServico : Entity
     public string Status { get; set; } = "ABERTA";
     public DateTime Data_Abertura { get; set; } = DateTime.UtcNow;
     public DateTime? Data_Conclusao { get; set; }
+    public Cliente? Cliente { get; set; }
+    public Mecanico? Mecanico { get; set; }
     public List<ItemServico> Itens { get; set; } = new();
     public List<OrdemServicoAnexo> Anexos { get; set; } = new();
     public List<OrdemServicoHistorico> Historicos { get; set; } = new();
@@ -17,5 +21,4 @@ public class OrdemServico : Entity
     public List<OrdemServicoPagamento> Pagamentos { get; set; } = new();
     public List<OrdemServicoObservacao> Observacoes { get; set; } = new();
 }
-
 

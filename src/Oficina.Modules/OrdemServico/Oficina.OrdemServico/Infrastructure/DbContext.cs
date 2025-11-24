@@ -1,5 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Oficina.Cadastro.Domain;
 using Oficina.OrdemServico.Domain;
+using Oficina.SharedKernel.Domain;
+
 namespace Oficina.OrdemServico.Infrastructure;
 public class OrdemServicoDbContext : DbContext
 {
@@ -16,6 +19,15 @@ public class OrdemServicoDbContext : DbContext
             e.Property(p=>p.Data_Conclusao);
             e.Property(p=>p.Created_At).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP(3)");
             e.Property(p=>p.Updated_At).HasColumnName("updated_at").HasDefaultValueSql(null).ValueGeneratedOnUpdate();
+
+            e.HasOne(p => p.Cliente).WithMany()
+                .HasForeignKey(p => p.Cliente_Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            e.HasOne(p => p.Mecanico).WithMany()
+                .HasForeignKey(p => p.Mecanico_Id)
+                .OnDelete(DeleteBehavior.Restrict);
+
             e.HasMany(p=>p.Itens).WithOne().HasForeignKey(i=>i.Ordem_Servico_Id);
             e.HasMany(p=>p.Anexos).WithOne().HasForeignKey(a=>a.Ordem_Servico_Id);
             e.HasMany(p=>p.Historicos).WithOne().HasForeignKey(h=>h.Ordem_Servico_Id);
@@ -24,6 +36,7 @@ public class OrdemServicoDbContext : DbContext
             e.HasMany(p=>p.Pagamentos).WithOne().HasForeignKey(p=>p.Ordem_Servico_Id);
             e.HasMany(p=>p.Observacoes).WithOne().HasForeignKey(o=>o.Ordem_Servico_Id);
         });
+
         modelBuilder.Entity<ItemServico>(e=>{
             e.ToTable("os_itens");
             e.Property(p=>p.Descricao).HasMaxLength(200).IsRequired();
@@ -83,7 +96,34 @@ public class OrdemServicoDbContext : DbContext
             e.Property(p=>p.Created_At).HasColumnName("created_at").HasDefaultValueSql("CURRENT_TIMESTAMP(3)");
             e.Property(p=>p.Updated_At).HasColumnName("updated_at").HasDefaultValueSql(null).ValueGeneratedOnUpdate();
         });
+
+        modelBuilder.Entity<Cliente>(entity =>
+        {
+            entity.ToTable("cad_clientes", tb => tb.ExcludeFromMigrations());
+            entity.Ignore(c => c.Origem);
+            entity.Ignore(c => c.PessoaFisica);
+            entity.Ignore(c => c.PessoaJuridica);
+            entity.Ignore(c => c.Financeiro);
+            entity.Ignore(c => c.Consentimento);
+            entity.Ignore(c => c.Enderecos);
+            entity.Ignore(c => c.Contatos);
+            entity.Ignore(c => c.Indicacoes);
+            entity.Ignore(c => c.Veiculos);
+            entity.Ignore(c => c.Anexos);
+            entity.Ignore(c => c.Documentos);
+        });
+
+        modelBuilder.Entity<Mecanico>(entity =>
+        {
+            entity.ToTable("cad_mecanicos", tb => tb.ExcludeFromMigrations());
+            entity.Ignore(m => m.EspecialidadePrincipal);
+            entity.Ignore(m => m.Especialidades);
+            entity.Ignore(m => m.Documentos);
+            entity.Ignore(m => m.Contatos);
+            entity.Ignore(m => m.Enderecos);
+            entity.Ignore(m => m.Certificacoes);
+            entity.Ignore(m => m.Disponibilidades);
+            entity.Ignore(m => m.Experiencias);
+        });
     }
 }
-
-

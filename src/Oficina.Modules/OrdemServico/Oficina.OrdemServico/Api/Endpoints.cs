@@ -1,11 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Oficina.OrdemServico.Infrastructure;
-using Oficina.OrdemServico.Domain;
-using Oficina.OrdemServico.Api;
-using FluentValidation;
-using Microsoft.AspNetCore.Routing;
+﻿using FluentValidation;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
+using Oficina.Cadastro.Domain;
+using Oficina.Cadastro.Infrastructure;
+using Oficina.OrdemServico.Api;
+using Oficina.OrdemServico.Domain;
+using Oficina.OrdemServico.Infrastructure;
 
 namespace Oficina.OrdemServico;
 
@@ -13,7 +15,7 @@ public static class Endpoints
 {
     public static void MapOrdemServicoEndpoints(this IEndpointRouteBuilder app)
     {
-        var g = app.MapGroup("/ordens").WithTags("Ordem de Serviço");
+        var g = app.MapGroup("/ordens").WithTags("Ordem de Serviço - Ordem");
         g.MapGet("/", async (OrdemServicoDbContext db) =>
              Results.Ok(await db.Ordens
                 .Include(o => o.Itens)
@@ -23,6 +25,8 @@ public static class Endpoints
                 .Include(o => o.Avaliacoes)
                 .Include(o => o.Pagamentos)
                 .Include(o => o.Observacoes)
+                //.Include(o => o.Cliente)
+                //.Include(o => o.Mecanico)
                 .AsNoTracking().ToListAsync()))
              .WithSummary("Lista ordens de serviço");
         g.MapGet("/{id:long}", async (long id, OrdemServicoDbContext db) =>
@@ -210,6 +214,7 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Remove observação da OS");
     }
+
 }
 
 

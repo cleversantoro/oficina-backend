@@ -18,7 +18,7 @@ public static class Endpoints
     public static void MapCadastroEndpoints(this IEndpointRouteBuilder app)
     {
 
-        //Clientes
+        #region Clientes
         var g = app.MapGroup("/cadastro").WithTags("Cadastro - Clientes");
 
         g.MapGet("/clientes", async (CadastroDbContext db) =>
@@ -203,11 +203,44 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Exclui cliente");
+        #endregion 
 
         //Veiculos
         var v = app.MapGroup("/cadastro").WithTags("Cadastro - Veiculos");
 
-        v.MapGet("/veiculos", async ([AsParameters] VeiculoFiltroDto filtro, CadastroDbContext db) =>
+        v.MapGet("/veiculos", async (CadastroDbContext db) =>
+        {
+            var veiculos = await db.VeiculosClientes
+                .OrderBy(veiculo => veiculo.Modelo!.Nome)
+                .ThenBy(veiculo => veiculo.Placa)
+                .Select(veiculo => new VeiculoDetalhesDto(
+                    veiculo.Id,
+                    veiculo.Cliente_Id,
+                    veiculo.Cliente!.Codigo,
+                    veiculo.Cliente.Nome,
+                    veiculo.Placa,
+                    veiculo.Modelo_Id,
+                    veiculo.Modelo != null ? veiculo.Modelo.Nome : null,
+                    veiculo.Modelo.Marca.Id,
+                    veiculo.Modelo.Marca.Nome,
+                    veiculo.Modelo.Marca.Pais,
+                    veiculo.Ano_Fab,
+                    veiculo.Ano_Mod,
+                    veiculo.Cor,
+                    veiculo.Chassi,
+                    veiculo.Renavam,
+                    veiculo.Km,
+                    veiculo.Combustivel,
+                    veiculo.Observacao,
+                    veiculo.Principal,
+                    veiculo.Ativo))
+                .ToListAsync();
+
+            //var result = veiculos.Select(MapToVeiculoDetalhesDto).ToList();
+            return Results.Ok(veiculos);
+        }).WithSummary("Lista veículos");
+
+        v.MapGet("/veiculos/filter", async ([AsParameters] VeiculoFiltroDto filtro, CadastroDbContext db) =>
         {
             var query = db.VeiculosClientes
                 .AsNoTracking()
@@ -251,13 +284,13 @@ public static class Endpoints
                     veiculo.Cliente!.Codigo,
                     veiculo.Cliente.Nome,
                     veiculo.Placa,
-                    veiculo.Marca,
                     veiculo.Modelo != null ? veiculo.Modelo.Nome : null,
-                    veiculo.Principal))
+                    veiculo.Principal,
+                    veiculo.Ativo))
                 .ToListAsync();
 
             return Results.Ok(veiculos);
-        }).WithSummary("Lista veículos");
+        }).WithSummary("Lista veículos por filtro");
 
         v.MapGet("/veiculos/{id:long}", async (long id, CadastroDbContext db) =>
         {
@@ -307,9 +340,10 @@ public static class Endpoints
             {
                 Cliente_Id = dto.ClienteId,
                 Placa = placa,
-                Marca = Normalize(dto.Marca),
+                //Marca = Normalize(dto.Marca),
                 Modelo_Id = dto.ModeloId,
-                Ano = dto.Ano,
+                Ano_Fab = dto.Ano_Fab,
+                Ano_Mod = dto.Ano_Mod,
                 Cor = Normalize(dto.Cor),
                 Chassi = Normalize(dto.Chassi),
                 Renavam = renavam,
@@ -376,9 +410,10 @@ public static class Endpoints
 
             veiculo.Cliente_Id = dto.ClienteId;
             veiculo.Placa = novaPlaca;
-            veiculo.Marca = Normalize(dto.Marca);
+            //veiculo.Marca = Normalize(dto.Marca);
             veiculo.Modelo_Id = dto.ModeloId;
-            veiculo.Ano = dto.Ano;
+            veiculo.Ano_Fab = dto.Ano_Fab;
+            veiculo.Ano_Mod = dto.Ano_Mod;
             veiculo.Cor = Normalize(dto.Cor);
             veiculo.Chassi = Normalize(dto.Chassi);
             veiculo.Renavam = novoRenavam;
@@ -405,7 +440,7 @@ public static class Endpoints
             return Results.NoContent();
         }).WithSummary("Remove veículo");
 
-        //mecanicos
+        #region Mecanicos
         var m = app.MapGroup("/cadastro").WithTags("Cadastro - Mecânicos");
 
         m.MapGet("/mecanicos", async (CadastroDbContext db) =>
@@ -640,8 +675,9 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Exclui mecânico");
+        #endregion
 
-        //Fornecedores
+        #region Fornecedores
         var f = app.MapGroup("/cadastro").WithTags("Cadastro - Fornecedores");
 
         f.MapGet("/fornecedores", async (CadastroDbContext db) =>
@@ -831,6 +867,7 @@ public static class Endpoints
             await db.SaveChangesAsync();
             return Results.NoContent();
         }).WithSummary("Exclui fornecedor");
+        #endregion
     }
     private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
@@ -857,17 +894,21 @@ public static class Endpoints
                 a.Observacao))
             .ToList();
 
-    private static IReadOnlyCollection<ClienteVeiculoDto> ToVeiculosDto(ICollection<VeiculoCliente> veiculos) =>
+    private static IReadOnlyCollection<VeiculoClienteDto> ToVeiculosDto(ICollection<VeiculoCliente> veiculos) =>
         veiculos
-            .Select(v => new ClienteVeiculoDto(
+            .Select(v => new VeiculoClienteDto(
                 v.Placa,
-                v.Marca,
                 v.Modelo_Id,
                 v.Modelo?.Nome,
-                v.Ano,
+                v.Ano_Fab,
+                v.Ano_Mod,
+                v.Renavam,
+                v.Km,
                 v.Cor,
                 v.Chassi,
-                v.Principal))
+                v.Principal,
+                v.Ativo)
+            )
             .ToList();
 
     private static IReadOnlyCollection<ClienteConsentimentoDto> ToConsentimentoDto(ClienteConsentimento? consentimento) =>
@@ -946,6 +987,31 @@ public static class Endpoints
             ToDocumentosDto(cliente.Documentos)
         );
     }
+
+    //private static ClienteDetalhesDto MapToVeuculoDetalhesDto(VeiculoCliente veiculo)
+    //{
+    //    return new ClienteDetalhesDto(
+    //        veiculo.Id,
+    //        veiculo.Codigo,
+    //        veiculo.Nome,
+    //        veiculo.Tipo,
+    //        veiculo.Status,
+    //        veiculo.Email,
+    //        veiculo.Vip,
+    //        veiculo.Observacoes,
+    //        veiculo.Created_At,
+    //        veiculo.Updated_At,
+    //        //ToOrigemDto(veiculo.Origem),
+    //        //ToPessoaFisicaDto(veiculo.PessoaFisica),
+    //        //ToPessoaJuridicaDto(veiculo.PessoaJuridica),
+    //        //ToEnderecosDto(veiculo.Enderecos),
+    //        //ToContatosDto(veiculo.Contatos),
+    //        //ToConsentimentoDto(veiculo.Consentimento),
+    //        //ToVeiculosDto(veiculo.Veiculos),
+    //        //ToAnexosDto(veiculo.Anexos),
+    //        //ToDocumentosDto(veiculo.Documentos)
+    //    );
+    //}
 
     private static void AtualizarCliente(Cliente cliente, ClienteUpdateDto dto, CadastroDbContext db)
     {
@@ -1067,12 +1133,13 @@ public static class Endpoints
         {
             Cliente_Id = cliente.Id,
             Placa = v.Placa,
-            Marca = v.Marca,
             Modelo_Id = v.ModeloId,
-            Ano = v.Ano,
+            Ano_Fab = v.Ano_Fab,
+            Ano_Mod = v.Ano_Mod,
             Cor = v.Cor,
             Chassi = v.Chassi,
-            Principal = v.Principal
+            Principal = v.Principal,
+            Ativo = v.Ativo
         }).ToList() ?? new List<VeiculoCliente>();
 
         db.ClienteAnexos.RemoveRange(cliente.Anexos);
@@ -1239,9 +1306,9 @@ public static class Endpoints
         {
             Cliente_Id = cliente.Id,
             Placa = v.Placa,
-            Marca = v.Marca,
             Modelo_Id = v.ModeloId,
-            Ano = v.Ano,
+            Ano_Fab = v.Ano_Fab,
+            Ano_Mod = v.Ano_Mod,
             Cor = v.Cor,
             Chassi = v.Chassi,
             Principal = v.Principal
@@ -1298,16 +1365,21 @@ public static class Endpoints
             clienteCodigo,
             clienteNome,
             veiculo.Placa,
-            veiculo.Marca,
             veiculo.Modelo_Id,
             veiculo.Modelo?.Nome,
-            veiculo.Ano,
+            veiculo.Modelo.Marca_Id,
+            veiculo.Modelo?.Marca.Nome,
+            veiculo.Modelo?.Marca.Pais,
+            veiculo.Ano_Fab,
+            veiculo.Ano_Mod,
             veiculo.Cor,
             veiculo.Chassi,
             veiculo.Renavam,
+            veiculo.Km,
             veiculo.Combustivel,
             veiculo.Observacao,
-            veiculo.Principal);
+            veiculo.Principal, 
+            veiculo.Ativo);
     }
     #endregion
 
