@@ -1,0 +1,17 @@
+{
+  "Observability": {
+    "Otlp": {
+      "Endpoint": "http://localhost:4317"  
+    },
+    "Otlp": {
+      "MetricsEndpoint": "http://localhost:4318" 
+    }
+  },
+  "Serilog": {
+    "Using": ["Serilog.Sinks.Console"],
+    "MinimumLevel": "Information",
+    "WriteTo": [
+      { "Name": "Console" }
+    ]
+  }
+}

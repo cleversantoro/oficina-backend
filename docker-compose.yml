@@ -1,4 +1,18 @@
+version: '3.8'
 services:
+  api:
+    build:
+      context: .
+      dockerfile: src/Oficina.Api/Dockerfile
+    image: oficina-api:latest
+    container_name: oficina-api
+    ports:
+      - "5134:80" # host:container
+    environment:
+      - ASPNETCORE_URLS=http://+:80
+      - ConnectionStrings__OficinaDb=server=mysql;port=3306;database=oficina_db;user=oficina;password=Oficina123@@
+    depends_on:
+      - mysql
 
   mysql:
     image: mysql:8.4
@@ -22,6 +36,55 @@ services:
       - 5050:80
     environment:
       - PMA_ARBITRARY=1
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    pid: "host"
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    command:
+      - '--path.rootfs=/host'
+    volumes:
+      - '/:/host:ro,rslave'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: oficina-cadvisor
+    restart: unless-stopped
+    ports:
+      - "8081:8080"   # opcional, só pra você abrir no navegador se quiser
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: oficina-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
+      - node-exporter
+      - cadvisor
+
+  grafana:
+    image: grafana/grafana:9.5.0
+    container_name: oficina-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
 
 volumes:
   mysql_data:

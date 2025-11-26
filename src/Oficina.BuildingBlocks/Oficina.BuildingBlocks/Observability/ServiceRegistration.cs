@@ -4,10 +4,12 @@ namespace Oficina.BuildingBlocks.Observability;
 
 public static class ServiceRegistration
 {
-    public static IServiceCollection AddObservability(this IServiceCollection services)
+    public static IServiceCollection AddObservability(this IServiceCollection services, string serviceName = "Oficina.Api")
     {
-        // Hook para OpenTelemetry/Serilog/NLog se necessÃ¡rio no futuro.
+        // Keep this extension as a registration point for future observability helpers.
+        // Instrumentation and exporters are configured at the host (API) level.
         return services;
     }
 }
+
 
